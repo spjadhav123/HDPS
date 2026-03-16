@@ -263,8 +263,11 @@ class _RecordActivityDialogState extends ConsumerState<_RecordActivityDialog> {
                     selected: isSelected,
                     onSelected: (val) {
                       setState(() {
-                        if (val) _selectedActivities.add(act);
-                        else _selectedActivities.remove(act);
+                        if (val) {
+                          _selectedActivities.add(act);
+                        } else {
+                          _selectedActivities.remove(act);
+                        }
                       });
                     },
                   );

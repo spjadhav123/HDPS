@@ -1,6 +1,5 @@
 // lib/features/parent/attendance_calendar_screen.dart
 import 'package:flutter/material.dart';
-import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/models/attendance_model.dart';
@@ -295,9 +294,9 @@ class _AttendanceCalendarViewState
                 spacing: 20,
                 runSpacing: 8,
                 children: [
-                  _LegendItem(color: AppTheme.accent, label: 'Present'),
-                  _LegendItem(color: AppTheme.secondary, label: 'Absent'),
-                  _LegendItem(color: AppTheme.warning, label: 'Leave'),
+                  const _LegendItem(color: AppTheme.accent, label: 'Present'),
+                  const _LegendItem(color: AppTheme.secondary, label: 'Absent'),
+                  const _LegendItem(color: AppTheme.warning, label: 'Leave'),
                   _LegendItem(color: Colors.grey.shade200, label: 'Not Marked'),
                   _LegendItem(
                       color: Colors.orange.shade100, label: 'Weekend'),

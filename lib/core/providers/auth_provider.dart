@@ -112,7 +112,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
                 (e) =>
                     e.key.toLowerCase() == user.email?.toLowerCase(),
                 orElse: () =>
-                    MapEntry('', {'role': 'parent', 'name': 'Parent'}),
+                    const MapEntry('', {'role': 'parent', 'name': 'Parent'}),
               )
               .value;
 

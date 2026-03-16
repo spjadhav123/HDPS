@@ -5,7 +5,6 @@ import '../../core/theme/app_theme.dart';
 import '../../core/models/student_model.dart';
 import '../../core/models/report_card_model.dart';
 import '../../core/providers/report_card_provider.dart';
-import '../../shared/widgets/page_header.dart';
 import '../../shared/widgets/app_card.dart';
 
 class ManageReportCardsScreen extends ConsumerStatefulWidget {
@@ -22,10 +21,10 @@ class _ManageReportCardsScreenState extends ConsumerState<ManageReportCardsScree
   final _remarksController = TextEditingController();
   
   final List<SubjectGrade> _grades = [
-    SubjectGrade(subject: 'English', marks: 0, maxMarks: 100, grade: 'A'),
-    SubjectGrade(subject: 'Mathematics', marks: 0, maxMarks: 100, grade: 'A'),
-    SubjectGrade(subject: 'Environmental Science', marks: 0, maxMarks: 100, grade: 'A'),
-    SubjectGrade(subject: 'Art & Craft', marks: 0, maxMarks: 50, grade: 'A'),
+    const SubjectGrade(subject: 'English', marks: 0, maxMarks: 100, grade: 'A'),
+    const SubjectGrade(subject: 'Mathematics', marks: 0, maxMarks: 100, grade: 'A'),
+    const SubjectGrade(subject: 'Environmental Science', marks: 0, maxMarks: 100, grade: 'A'),
+    const SubjectGrade(subject: 'Art & Craft', marks: 0, maxMarks: 50, grade: 'A'),
   ];
 
   bool _isSaving = false;

@@ -43,7 +43,7 @@ class _BulkAddStudentsScreenState extends ConsumerState<BulkAddStudentsScreen> {
   }
   
   void _downloadTemplate() {
-    final csv = "Full_Name,Aadhaar_Number,Parent_Name,Parent_Email,Phone,Class\nExample Student,123456789012,Parent Name,parent@example.com,9876543210,Playgroup\n";
+    const csv = "Full_Name,Aadhaar_Number,Parent_Name,Parent_Email,Phone,Class\nExample Student,123456789012,Parent Name,parent@example.com,9876543210,Playgroup\n";
     final bytes = utf8.encode(csv);
     final blob = html.Blob([bytes]);
     final url = html.Url.createObjectUrlFromBlob(blob);
@@ -166,10 +166,12 @@ class _BulkAddStudentsScreenState extends ConsumerState<BulkAddStudentsScreen> {
     // Validate
     List<String> errors = [];
     if (name.isEmpty) errors.add("Name required");
-    if (aadhaar.isEmpty) errors.add("Aadhaar required");
-    else if (aadhaar.length != 12 || int.tryParse(aadhaar) == null) errors.add("Aadhaar must be 12 digits");
-    if (phone.isEmpty) errors.add("Phone required");
-    else if (phone.length < 10) errors.add("Invalid phone");
+    if (aadhaar.isEmpty) {
+      errors.add("Aadhaar required");
+    } else if (aadhaar.length != 12 || int.tryParse(aadhaar) == null) errors.add("Aadhaar must be 12 digits");
+    if (phone.isEmpty) {
+      errors.add("Phone required");
+    } else if (phone.length < 10) errors.add("Invalid phone");
     
     final student = Student(
       id: '',
@@ -293,7 +295,7 @@ class _BulkAddStudentsScreenState extends ConsumerState<BulkAddStudentsScreen> {
   void _downloadCredentials() {
     if (_generatedCredentials.isEmpty) return;
 
-    final header = "Student_Name,Username,Password\n";
+    const header = "Student_Name,Username,Password\n";
     final rows = _generatedCredentials.map((c) => "${c.studentName},${c.username},${c.password}").join("\n");
     final csv = "$header$rows";
 
@@ -410,7 +412,7 @@ class _BulkAddStudentsScreenState extends ConsumerState<BulkAddStudentsScreen> {
                     const SizedBox(height: 12),
                     LinearProgressIndicator(value: _uploadProgress, color: AppTheme.accent, minHeight: 8, borderRadius: BorderRadius.circular(4)),
                     const SizedBox(height: 8),
-                    Text('${(_uploadProgress * 100).toStringAsFixed(0)}% Completed', style: TextStyle(color: AppTheme.accent, fontWeight: FontWeight.bold)),
+                    Text('${(_uploadProgress * 100).toStringAsFixed(0)}% Completed', style: const TextStyle(color: AppTheme.accent, fontWeight: FontWeight.bold)),
                   ],
                 ),
               ),
@@ -525,7 +527,7 @@ class _BulkAddStudentsScreenState extends ConsumerState<BulkAddStudentsScreen> {
                       Expanded(
                         flex: 3,
                         child: row.isValid 
-                          ? Row(children: [const Icon(Icons.check_circle_rounded, color: Colors.green, size: 16), const SizedBox(width: 4), const Text('Ready', style: TextStyle(color: Colors.green, fontSize: 13, fontWeight: FontWeight.bold))])
+                          ? const Row(children: [Icon(Icons.check_circle_rounded, color: Colors.green, size: 16), SizedBox(width: 4), Text('Ready', style: TextStyle(color: Colors.green, fontSize: 13, fontWeight: FontWeight.bold))])
                           : Row(crossAxisAlignment: CrossAxisAlignment.start, children: [const Icon(Icons.error_outline_rounded, color: Colors.red, size: 16), const SizedBox(width: 4), Expanded(child: Text(row.errorMessage, style: const TextStyle(color: Colors.red, fontSize: 13, fontWeight: FontWeight.bold)))]),
                       ),
                       SizedBox(

@@ -9,7 +9,6 @@ import '../../core/providers/auth_provider.dart';
 import '../../core/utils/app_date_utils.dart';
 import '../../shared/widgets/page_header.dart';
 import '../../shared/widgets/empty_state.dart';
-import '../../shared/widgets/app_card.dart';
 
 class NotificationCenter extends ConsumerWidget {
   const NotificationCenter({super.key});

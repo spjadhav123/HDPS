@@ -104,7 +104,7 @@ class AccountantDashboard extends ConsumerWidget {
           const SizedBox(height: 16),
           ...receipts.take(10).toList().asMap().entries.map((e) {
             final p = e.value;
-            final dateStr = DateFormat('dd MMM, yyyy').format(p.date as DateTime);
+            final dateStr = DateFormat('dd MMM, yyyy').format(p.date);
             return AnimatedListItem(
               index: e.key,
               child: Padding(

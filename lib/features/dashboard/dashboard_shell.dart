@@ -271,7 +271,7 @@ class _DashboardShellState extends ConsumerState<DashboardShell>
                   ],
                 ),
               ).animate().fadeIn(duration: 200.ms).slideX(begin: -0.05),
-              Icon(Icons.chevron_left_rounded,
+              const Icon(Icons.chevron_left_rounded,
                       color: AppTheme.textSecondary, size: 18)
                   .animate()
                   .fadeIn(duration: 200.ms),
@@ -333,7 +333,7 @@ class _DashboardShellState extends ConsumerState<DashboardShell>
                   Container(
                     width: 6,
                     height: 6,
-                    decoration: BoxDecoration(
+                    decoration: const BoxDecoration(
                       color: AppTheme.primary,
                       shape: BoxShape.circle,
                     ),

@@ -18,8 +18,6 @@ import '../../core/models/receipt_model.dart';
 import 'package:intl/intl.dart';
 import '../../shared/widgets/app_animations.dart';
 import 'dart:js' as js;
-import 'dart:convert';
-import 'package:http/http.dart' as http;
 
 class FeePaymentScreen extends ConsumerStatefulWidget {
   const FeePaymentScreen({super.key});
@@ -466,7 +464,7 @@ class _FeeLine extends StatelessWidget {
   final String label;
   final String amount;
   final bool isSmall;
-  const _FeeLine({required this.label, required this.amount, this.isSmall = false});
+  const _FeeLine({required this.label, required this.amount});
 
   @override
   Widget build(BuildContext context) {

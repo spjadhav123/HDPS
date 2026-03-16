@@ -3,7 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../models/fee_structure_model.dart';
 import '../models/student_model.dart';
-import 'student_provider.dart'; // to update students when fee changes
+// to update students when fee changes
 
 class FeeStructureRepository {
   final FirebaseFirestore _db = FirebaseFirestore.instance;

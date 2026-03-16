@@ -20,9 +20,9 @@ class MyChildScreen extends ConsumerWidget {
         child: childAsync.when(
           data: (student) {
             if (student == null) {
-              return Column(
+              return const Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
-                children: const [
+                children: [
                   PageHeader(
                     title: "My Child's Progress",
                     subtitle:
@@ -75,7 +75,7 @@ class MyChildScreen extends ConsumerWidget {
         crossAxisSpacing: 16,
         mainAxisSpacing: 16,
         childAspectRatio: 1.8,
-        children: [
+        children: const [
           _ProgressCard(label: 'Attendance', value: '88%', icon: Icons.how_to_reg_rounded, color: AppTheme.accent, delay: 0),
           _ProgressCard(label: 'Overall Grade', value: 'A', icon: Icons.star_rounded, color: AppTheme.primary, delay: 100),
           _ProgressCard(label: 'Rank in Class', value: '#4', icon: Icons.emoji_events_rounded, color: AppTheme.warning, delay: 200),
@@ -88,7 +88,7 @@ class MyChildScreen extends ConsumerWidget {
     final subjects = [
       ('English', 90, AppTheme.primary),
       ('Mathematics', 92, AppTheme.accent),
-      ('Science Activity', 88, Color(0xFF8B5CF6)),
+      ('Science Activity', 88, const Color(0xFF8B5CF6)),
       ('Art & Craft', 96, AppTheme.secondary),
       ('Physical Ed', 85, AppTheme.warning),
     ];

@@ -84,7 +84,7 @@ class TeacherDashboard extends ConsumerWidget {
       ('9:00 AM', 'English Literacy', Icons.menu_book_rounded, AppTheme.accent),
       ('10:00 AM', 'Math Activity', Icons.calculate_rounded, AppTheme.warning),
       ('11:00 AM', 'Snack Break', Icons.lunch_dining_rounded, AppTheme.secondary),
-      ('11:30 AM', 'Art & Craft', Icons.palette_rounded, Color(0xFF8B5CF6)),
+      ('11:30 AM', 'Art & Craft', Icons.palette_rounded, const Color(0xFF8B5CF6)),
       ('12:30 PM', 'Story Time & Dismissal', Icons.auto_stories_rounded, AppTheme.accent),
     ];
 

@@ -30,7 +30,6 @@ import '../../features/notifications/notification_center.dart';
 import '../../features/events/events_screen.dart';
 import '../../features/chat/chat_screen.dart';
 import '../../features/gallery/gallery_screen.dart';
-import '../constants/app_constants.dart';
 
 // ─────────────────────────────────────────────────────────────
 // Page transition builder — smooth fade+slide up

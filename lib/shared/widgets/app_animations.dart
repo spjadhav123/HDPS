@@ -433,7 +433,7 @@ class _ToastWidgetState extends State<_ToastWidget>
                       await _ctrl.reverse();
                       widget.onDismiss();
                     },
-                    child: Icon(Icons.close, size: 16, color: AppTheme.textSecondary),
+                    child: const Icon(Icons.close, size: 16, color: AppTheme.textSecondary),
                   ),
                 ],
               ),
@@ -734,11 +734,11 @@ class FullPageLoader extends StatelessWidget {
                 ),
               ],
             ),
-            child: Padding(
-              padding: const EdgeInsets.all(16),
+            child: const Padding(
+              padding: EdgeInsets.all(16),
               child: CircularProgressIndicator(
                 strokeWidth: 3,
-                valueColor: const AlwaysStoppedAnimation(AppTheme.primary),
+                valueColor: AlwaysStoppedAnimation(AppTheme.primary),
               ),
             ),
           )

@@ -1,6 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_animate/flutter_animate.dart';
-import 'package:intl/intl.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../core/theme/app_theme.dart';
@@ -143,9 +141,9 @@ class _StudentsScreenState extends ConsumerState<StudentsScreen> {
   Widget _buildTableHeader() {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-      decoration: BoxDecoration(
+      decoration: const BoxDecoration(
         color: AppTheme.background,
-        borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
       ),
       child: const Row(
         children: [
@@ -493,11 +491,11 @@ class _StudentsScreenState extends ConsumerState<StudentsScreen> {
       barrierDismissible: false,
       builder: (ctx) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: Row(
+        title: const Row(
           children: [
-            const Icon(Icons.check_circle_outline, color: Colors.green, size: 28),
-            const SizedBox(width: 12),
-            const Text('Student Added!'),
+            Icon(Icons.check_circle_outline, color: Colors.green, size: 28),
+            SizedBox(width: 12),
+            Text('Student Added!'),
           ],
         ),
         content: Column(

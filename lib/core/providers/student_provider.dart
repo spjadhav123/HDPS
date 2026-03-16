@@ -1,7 +1,6 @@
 // lib/core/providers/student_provider.dart
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:crypto/crypto.dart';
 import 'dart:convert';
 import '../models/student_model.dart';
@@ -236,7 +235,7 @@ class StudentRepository {
     if (newUsername.isNotEmpty) {
       final credRef = _firestore.collection('users').doc(newUsername);
       
-      if (oldStudent.parentUsername != newUsername && oldStudent.parentUsername != null) {
+      if (oldStudent.parentUsername != newUsername) {
         // Delete old credentials if username changed
         await _firestore.collection('users').doc(oldStudent.parentUsername).delete();
         

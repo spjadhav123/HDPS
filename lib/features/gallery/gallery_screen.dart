@@ -9,9 +9,7 @@ import '../../shared/widgets/page_header.dart';
 import '../../shared/widgets/empty_state.dart';
 import '../../shared/widgets/app_card.dart';
 import 'dart:io';
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:file_picker/file_picker.dart';
-import 'dart:typed_data';
 import 'package:flutter/foundation.dart';
 import '../../shared/widgets/app_animations.dart';
 

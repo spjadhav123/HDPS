@@ -279,10 +279,10 @@ class AdminDashboard extends ConsumerWidget {
                 .fadeIn(duration: 350.ms, delay: 200.ms)
                 .slideX(begin: -0.05, curve: Curves.easeOut),
             const SizedBox(height: 12),
-            Wrap(
+            const Wrap(
               spacing: 12,
               runSpacing: 12,
-              children: const [
+              children: [
                 _QuickAction(icon: Icons.person_add_rounded, label: 'Add Student', color: Colors.blue, animDelay: 220),
                 _QuickAction(icon: Icons.campaign_rounded, label: 'Send Notice', color: Colors.orange, animDelay: 290),
                 _QuickAction(icon: Icons.receipt_long_rounded, label: 'Fee Receipt', color: Colors.green, animDelay: 360),

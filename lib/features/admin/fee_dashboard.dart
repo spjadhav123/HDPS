@@ -171,7 +171,7 @@ class AdminFeeDashboard extends ConsumerWidget {
                     ],
                   ),
             );
-          }).toList(),
+          }),
           if (classSummary.isEmpty) const Text('No data available', style: TextStyle(color: AppTheme.textSecondary)),
         ],
       ),
