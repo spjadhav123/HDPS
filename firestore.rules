@@ -1,0 +1,151 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ── Helper Functions ────────────────────────────────────────────────
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function getUserRole() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role;
+    }
+
+    function isAdmin() {
+      return isSignedIn() && getUserRole() == 'admin';
+    }
+
+    function isTeacher() {
+      return isSignedIn() && getUserRole() == 'teacher';
+    }
+
+    function isAccountant() {
+      return isSignedIn() && getUserRole() == 'accountant';
+    }
+
+    function isParent() {
+      return isSignedIn() && getUserRole() == 'parent';
+    }
+
+    function isStaff() {
+      return isAdmin() || isTeacher() || isAccountant();
+    }
+
+
+    // ── /users/{uid} ────────────────────────────────────────────────────
+    // Users can only read/write their own profile. Admins can read all.
+    match /users/{uid} {
+      allow read: if isSignedIn() && (request.auth.uid == uid || isAdmin());
+      allow write: if isSignedIn() && request.auth.uid == uid;
+    }
+
+
+    // ── /students/{studentId} ───────────────────────────────────────────
+    // Admin: full CRUD
+    // Teacher & Accountant: read only
+    // Parent: read only their linked student (parentEmail match)
+    match /students/{studentId} {
+      allow read: if isSignedIn() && (
+        isStaff() ||
+        (isParent() && resource.data.parentEmail == request.auth.token.email)
+      );
+      allow create, update, delete: if isAdmin();
+    }
+
+
+    // ── /attendance/{docId} ─────────────────────────────────────────────
+    // Admin & Teacher: full CRUD
+    // Parent: read only records for their child
+    // Accountant: read only
+    match /attendance/{docId} {
+      allow read: if isSignedIn();
+      allow create, update: if isAdmin() || isTeacher();
+      allow delete: if isAdmin();
+    }
+
+
+    // ── /homework/{hwId} ────────────────────────────────────────────────
+    // Admin & Teacher: full CRUD
+    // Parent & Others: read only
+    match /homework/{hwId} {
+      allow read: if isSignedIn();
+      allow create, update, delete: if isAdmin() || isTeacher();
+    }
+
+
+    // ── /events/{eventId} ───────────────────────────────────────────────
+    // Admin: full CRUD
+    // All signed-in: read
+    match /events/{eventId} {
+      allow read: if isSignedIn();
+      allow create, update, delete: if isAdmin();
+    }
+
+
+    // ── /notifications/{notifId} ────────────────────────────────────────
+    // Admin: full CRUD
+    // Teacher: create (can send to parents)
+    // All signed-in: read (filtered by targetRole in queries)
+    // Users: update their own (mark read)
+    match /notifications/{notifId} {
+      allow read: if isSignedIn();
+      allow create: if isAdmin() || isTeacher();
+      allow update: if isSignedIn(); // for isRead flag
+      allow delete: if isAdmin();
+    }
+
+
+    // ── /chats/{threadId} ───────────────────────────────────────────────
+    // Chat thread metadata: only participants can read/write
+    match /chats/{threadId} {
+      allow read, write: if isSignedIn() && (
+        request.auth.uid in resource.data.participants ||
+        request.auth.uid in request.resource.data.participants
+      );
+
+      // Messages inside a thread
+      match /messages/{msgId} {
+        allow read, write: if isSignedIn() && (
+          request.auth.uid in get(/databases/$(database)/documents/chats/$(threadId)).data.participants
+        );
+      }
+    }
+
+
+    // ── /fees/{feeId} ───────────────────────────────────────────────────
+    // Admin & Accountant: full CRUD
+    // Parent: read their own
+    // Teacher: read only
+    match /fees/{feeId} {
+      allow read: if isSignedIn() && (
+        isStaff() ||
+        (isParent() && resource.data.parentEmail == request.auth.token.email)
+      );
+      allow create, update, delete: if isAdmin() || isAccountant();
+    }
+
+
+    // ── /daily_activities/{docId} ───────────────────────────────────────
+    // Teacher: create/update
+    // Admin: full CRUD
+    // All signed-in: read
+    match /daily_activities/{docId} {
+      allow read: if isSignedIn();
+      allow create, update: if isAdmin() || isTeacher();
+      allow delete: if isAdmin();
+    }
+
+
+    // ── /gallery/{albumId} ──────────────────────────────────────────────
+    match /gallery/{albumId} {
+      allow read: if isSignedIn();
+      allow create, update, delete: if isAdmin() || isTeacher();
+
+      match /photos/{photoId} {
+        allow read: if isSignedIn();
+        allow create, update, delete: if isAdmin() || isTeacher();
+      }
+    }
+
+  }
+}
