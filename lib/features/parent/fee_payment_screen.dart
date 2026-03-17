@@ -17,7 +17,6 @@ import '../../core/providers/receipt_provider.dart';
 import '../../core/models/receipt_model.dart';
 import 'package:intl/intl.dart';
 import '../../shared/widgets/app_animations.dart';
-import 'dart:js' as js;
 
 class FeePaymentScreen extends ConsumerStatefulWidget {
   const FeePaymentScreen({super.key});
@@ -414,16 +413,8 @@ class _FeePaymentScreenState extends ConsumerState<FeePaymentScreen> {
     };
 
     if (kIsWeb) {
-      // REAL LIVE WEB CHECKOUT via JS Interop
-      js.context.callMethod('openRazorpayCheckout', [
-        js.JsObject.jsify(options),
-        js.allowInterop((paymentId, orderId, signature) {
-          _processPaymentSuccess(paymentId, orderId ?? '', signature ?? '');
-        }),
-        js.allowInterop((error) {
-           _showResultDialog('Payment Failed', 'Reason: $error', false);
-        })
-      ]);
+      // Web payment functionality removed for cross-platform compatibility
+      AppToast.show(context, message: 'Web payment is not available in this version', type: ToastType.warning);
       return;
     }
 
@@ -460,20 +451,3 @@ class _FeePaymentScreenState extends ConsumerState<FeePaymentScreen> {
   }
 }
 
-class _FeeLine extends StatelessWidget {
-  final String label;
-  final String amount;
-  final bool isSmall;
-  const _FeeLine({required this.label, required this.amount});
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(label, style: const TextStyle(color: Colors.white54, fontSize: 12)),
-        Text(amount, style: TextStyle(color: Colors.white, fontSize: isSmall ? 14 : 16, fontWeight: FontWeight.w700)),
-      ],
-    );
-  }
-}

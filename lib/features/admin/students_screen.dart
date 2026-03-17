@@ -6,8 +6,6 @@ import '../../shared/widgets/page_header.dart';
 import '../../shared/widgets/app_animations.dart';
 import '../../core/models/student_model.dart';
 import '../../core/providers/student_provider.dart';
-import 'dart:convert';
-import 'dart:html' as html;
 
 class StudentsScreen extends ConsumerStatefulWidget {
   const StudentsScreen({super.key});
@@ -304,22 +302,10 @@ class _StudentsScreenState extends ConsumerState<StudentsScreen> {
       return;
     }
 
-    final StringBuffer buffer = StringBuffer();
-    buffer.writeln("Full_Name,Student_Code,Aadhaar_Number,Class,Parent_Name,Parent_Email,Phone,Fees_Total,Fees_Paid,Status");
-
-    for (final s in studentsList) {
-      final name = s.name.replaceAll(',', '');
-      final parent = s.parent.replaceAll(',', '');
-      buffer.writeln("$name,${s.studentCode},${s.aadhaarNumber},${s.className},$parent,${s.parentEmail},${s.phone},${s.feesTotal},${s.feesPaid},${s.status}");
-    }
-
-    final bytes = utf8.encode(buffer.toString());
-    final blob = html.Blob([bytes]);
-    final url = html.Url.createObjectUrlFromBlob(blob);
-    final anchor = html.AnchorElement(href: url)
-      ..setAttribute("download", "students_export_${DateTime.now().millisecondsSinceEpoch}.csv")
-      ..click();
-    html.Url.revokeObjectUrl(url);
+    // Export functionality removed for cross-platform compatibility
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Export functionality is not available in this version')),
+    );
   }
 
   void _showAddStudentDialog(BuildContext context) {
@@ -556,14 +542,10 @@ class _StudentsScreenState extends ConsumerState<StudentsScreen> {
         IconButton(
           icon: const Icon(Icons.copy_rounded, size: 18),
           onPressed: () {
-            // Copy to clipboard (Web)
-            final el = html.document.createElement('textarea') as html.TextAreaElement;
-            el.value = value;
-            html.document.body?.append(el);
-            el.select();
-            html.document.execCommand('copy');
-            el.remove();
-            // We can't easily show another toast here without more context, but this works
+            // Copy to clipboard functionality removed for cross-platform compatibility
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('Copy functionality is not available in this version')),
+            );
           },
         ),
       ],

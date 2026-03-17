@@ -3,13 +3,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:excel/excel.dart' as excel_pkg;
+import 'package:share_plus/share_plus.dart';
+import 'dart:convert';
+import 'dart:typed_data';
 import '../../core/theme/app_theme.dart';
 import '../../core/models/student_model.dart';
 import '../../core/providers/student_provider.dart';
 import '../../shared/widgets/page_header.dart';
 import '../../shared/widgets/app_card.dart';
-import 'dart:convert';
-import 'dart:html' as html; // Web-only for downloading files
 
 class _PreviewRow {
   Student student;
@@ -43,14 +44,31 @@ class _BulkAddStudentsScreenState extends ConsumerState<BulkAddStudentsScreen> {
   }
   
   void _downloadTemplate() {
-    const csv = "Full_Name,Aadhaar_Number,Parent_Name,Parent_Email,Phone,Class\nExample Student,123456789012,Parent Name,parent@example.com,9876543210,Playgroup\n";
-    final bytes = utf8.encode(csv);
-    final blob = html.Blob([bytes]);
-    final url = html.Url.createObjectUrlFromBlob(blob);
-    final anchor = html.AnchorElement(href: url)
-      ..setAttribute("download", "student_template.csv")
-      ..click();
-    html.Url.revokeObjectUrl(url);
+    // Create CSV template with sample data
+    final headers = ['Student Name', 'Aadhaar Number', 'Parent Name', 'Parent Email', 'Phone Number', 'Class'];
+    
+    // Sample data rows
+    final sampleData = [
+      ['John Doe', '123456789012', 'Jane Doe', 'jane.doe@example.com', '9876543210', 'Nursery'],
+      ['Alice Smith', '234567890123', 'Bob Smith', 'bob.smith@example.com', '8765432109', 'Jr KG'],
+      ['Charlie Brown', '345678901234', 'Lucy Brown', 'lucy.brown@example.com', '7654321098', 'Sr KG'],
+    ];
+    
+    // Combine headers and sample data
+    final csvData = [headers, ...sampleData];
+    
+    // Convert to CSV string manually
+    final csvString = csvData.map((row) => row.map((cell) => '"$cell"').join(',')).join('\n');
+    
+    // Share the CSV file
+    Share.shareXFiles(
+      [XFile.fromData(
+        Uint8List.fromList(utf8.encode(csvString)),
+        mimeType: 'text/csv',
+        name: 'student_import_template.csv'
+      )],
+      text: 'Student Import Template',
+    );
   }
 
   Future<void> _pickAndParseFile() async {
@@ -296,16 +314,18 @@ class _BulkAddStudentsScreenState extends ConsumerState<BulkAddStudentsScreen> {
     if (_generatedCredentials.isEmpty) return;
 
     const header = "Student_Name,Username,Password\n";
-    final rows = _generatedCredentials.map((c) => "${c.studentName},${c.username},${c.password}").join("\n");
+    final rows = _generatedCredentials.map((c) => '"${c.studentName}","${c.username}","${c.password}"').join('\n');
     final csv = "$header$rows";
 
-    final bytes = utf8.encode(csv);
-    final blob = html.Blob([bytes]);
-    final url = html.Url.createObjectUrlFromBlob(blob);
-    final anchor = html.AnchorElement(href: url)
-      ..setAttribute("download", "parent_credentials_${DateTime.now().millisecondsSinceEpoch}.csv")
-      ..click();
-    html.Url.revokeObjectUrl(url);
+    // Share the credentials CSV file
+    Share.shareXFiles(
+      [XFile.fromData(
+        Uint8List.fromList(utf8.encode(csv)),
+        mimeType: 'text/csv',
+        name: 'parent_credentials.csv'
+      )],
+      text: 'Parent Login Credentials',
+    );
   }
 
   void _editRow(int index) {
