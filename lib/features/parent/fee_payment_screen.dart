@@ -17,6 +17,7 @@ import '../../core/providers/receipt_provider.dart';
 import '../../core/models/receipt_model.dart';
 import 'package:intl/intl.dart';
 import '../../shared/widgets/app_animations.dart';
+import 'razorpay_web_stub.dart' if (dart.library.js) 'razorpay_web_impl.dart';
 
 class FeePaymentScreen extends ConsumerStatefulWidget {
   const FeePaymentScreen({super.key});
@@ -402,7 +403,7 @@ class _FeePaymentScreenState extends ConsumerState<FeePaymentScreen> {
       'name': 'HD Preprimary School',
       'description': 'Fee Payment for ${student.name}',
       'order_id': orderId,
-      'prefill': {
+      'prefill': <String, dynamic>{
         'contact': student.phone,
         'email': student.parentEmail,
         'name': student.parent,
@@ -412,9 +413,25 @@ class _FeePaymentScreenState extends ConsumerState<FeePaymentScreen> {
       }
     };
 
+    if (selectedMode.contains('UPI') && upiId.isNotEmpty) {
+      (options['prefill'] as Map<String, dynamic>)['method'] = 'upi';
+      (options['prefill'] as Map<String, dynamic>)['vpa'] = upiId;
+    }
+
     if (kIsWeb) {
-      // Web payment functionality removed for cross-platform compatibility
-      AppToast.show(context, message: 'Web payment is not available in this version', type: ToastType.warning);
+      openRazorpayWeb(
+        options,
+        (res) {
+          _processPaymentSuccess(
+            res['paymentId'] ?? '',
+            res['orderId'] ?? orderId,
+            res['signature'] ?? ''
+          );
+        },
+        (error) {
+          _showResultDialog('Payment Failed', 'Error: $error', false);
+        }
+      );
       return;
     }
 
