@@ -1,21 +1,11 @@
 {
-  "outputDirectory": "build/web",
+  "outputDirectory": "web",
   "framework": null,
   "installCommand": "npm install",
-  "buildCommand": "echo 'Skipping build command; deploy pre-built flutter via Node'",
+  "buildCommand": "mv build/web web || true",
   "cleanUrls": true,
   "rewrites": [
     { "source": "/api/(.*)", "destination": "/api" },
-    { "source": "/favicon.png", "destination": "/build/web/favicon.png" },
-    { "source": "/flutter.js", "destination": "/build/web/flutter.js" },
-    { "source": "/flutter_bootstrap.js", "destination": "/build/web/flutter_bootstrap.js" },
-    { "source": "/flutter_service_worker.js", "destination": "/build/web/flutter_service_worker.js" },
-    { "source": "/main.dart.js", "destination": "/build/web/main.dart.js" },
-    { "source": "/manifest.json", "destination": "/build/web/manifest.json" },
-    { "source": "/version.json", "destination": "/build/web/version.json" },
-    { "source": "/assets/(.*)", "destination": "/build/web/assets/$1" },
-    { "source": "/canvaskit/(.*)", "destination": "/build/web/canvaskit/$1" },
-    { "source": "/icons/(.*)", "destination": "/build/web/icons/$1" },
-    { "source": "/(.*)", "destination": "/build/web/index.html" }
+    { "source": "/(.*)", "destination": "/index.html" }
   ]
 }
