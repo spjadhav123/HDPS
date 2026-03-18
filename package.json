@@ -7,6 +7,6 @@
     "express": "^5.2.1"
   },
   "scripts": {
-    "build": "mv build/web web || echo 'Failed to move build/web'"
+    "build": "echo 'Skipping build, using pre-built flutter files from build/web'"
   }
 }

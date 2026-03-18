@@ -1,8 +1,8 @@
 {
-  "outputDirectory": "web",
+  "outputDirectory": "build/web",
   "framework": null,
   "installCommand": "npm install",
-  "buildCommand": "mv build/web web || true",
+  "buildCommand": "echo 'Skipping build command; using pre-built flutter files from build/web'",
   "cleanUrls": true,
   "rewrites": [
     { "source": "/api/(.*)", "destination": "/api" },
