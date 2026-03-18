@@ -22,3 +22,9 @@ build/android/
 build/macos/
 build/windows/
 build/linux/
+
+# Hidden system / git / pub folders
+.git/
+.pub-cache/
+.pub/
+build/test_cache/
