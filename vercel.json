@@ -1,4 +1,5 @@
 {
+  "outputDirectory": "build/web",
   "framework": null,
   "installCommand": "npm install",
   "buildCommand": "echo 'Skipping build command; deploy pre-built flutter via Node'",
