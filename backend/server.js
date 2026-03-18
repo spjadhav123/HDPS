@@ -76,7 +76,13 @@ app.post('/api/verify-payment', (req, res) => {
     }
 });
 
-const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => {
-    console.log(`Backend Server listening on port ${PORT}`);
-});
+// Export the Express API
+module.exports = app;
+
+// Conditionally listen if this file is run directly (local development)
+if (require.main === module) {
+    const PORT = process.env.PORT || 3000;
+    app.listen(PORT, () => {
+        console.log(`Backend Server listening on port ${PORT}`);
+    });
+}

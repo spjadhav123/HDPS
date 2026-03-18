@@ -1,6 +1,7 @@
 {
   "cleanUrls": true,
   "rewrites": [
+    { "source": "/api/(.*)", "destination": "/api" },
     { "source": "/favicon.png", "destination": "/build/web/favicon.png" },
     { "source": "/flutter.js", "destination": "/build/web/flutter.js" },
     { "source": "/flutter_bootstrap.js", "destination": "/build/web/flutter_bootstrap.js" },

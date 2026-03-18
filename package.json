@@ -1,0 +1,9 @@
+{
+  "name": "humpty_dumpty_preschool",
+  "version": "1.0.0",
+  "description": "Root package for Vercel Serverless Functions",
+  "dependencies": {
+    "cors": "^2.8.6",
+    "express": "^5.2.1"
+  }
+}

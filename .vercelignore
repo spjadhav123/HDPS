@@ -20,8 +20,11 @@
 !icons/**
 !backend/
 !backend/**
+!api/
+!api/**
+!package.json
+!package-lock.json
 !.vercel/
-
 # Re-ignore what's definitely NOT needed
 build/test_cache/
 node_modules/
