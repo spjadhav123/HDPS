@@ -1,7 +1,8 @@
 {
-  "outputDirectory": "web",
+  "outputDirectory": "dist-web",
   "framework": null,
   "installCommand": "npm install",
+  "buildCommand": "mkdir -p dist-web && cp -R build/web/* dist-web/",
   "cleanUrls": true,
   "rewrites": [
     { "source": "/api/(.*)", "destination": "/api" },

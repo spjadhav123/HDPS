@@ -7,6 +7,6 @@
     "express": "^5.2.1"
   },
   "scripts": {
-    "build": "rm -rf web && mv build/web web"
+    "build": "echo 'Build handled by vercel.json'"
   }
 }
