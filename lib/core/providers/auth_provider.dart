@@ -221,63 +221,44 @@ class AuthNotifier extends StateNotifier<AuthState> {
     final normalizedPassword = password.replaceAll(RegExp(r'[^0-9]'), '');
     
     print('DEBUG: [ParentLogin] Username: $normalizedUsername');
-    print('DEBUG: [ParentLogin] Normalized Password Length: ${normalizedPassword.length}');
 
     try {
+      // Direct Firebase Authentication using the background-mapped email
+      final emailForAuth = '$normalizedUsername@hdpayment.preschool';
+      
+      final cred = await _auth.signInWithEmailAndPassword(
+        email: emailForAuth,
+        password: normalizedPassword,
+      );
+
+      final uid = cred.user!.uid;
+
+      // Now that the user is authentically signed in natively, they bypass 
+      // the lock in firestore.rules and can read their own data to verify role/status.
       final firestore = FirebaseFirestore.instance;
       final userDoc = await firestore
           .collection('users')
-          .doc(normalizedUsername)
+          .doc(uid)
           .get();
 
       if (!userDoc.exists) {
-         print('DEBUG: [ParentLogin] Username not found in "users" collection: $normalizedUsername');
-         state = state.copyWith(
-           isLoading: false,
-           error: 'Invalid Username.',
-         );
+         state = state.copyWith(isLoading: false, error: 'Database record missing.');
+         await _auth.signOut();
          return false;
       }
 
       final userData = userDoc.data()!;
-      print('DEBUG: [ParentLogin] User record found: ${userData['username']}');
-
-      // Verify role
       final role = userData['role'] as String? ?? '';
       if (role.toLowerCase() != 'parent') {
-        print('DEBUG: [ParentLogin] Role mismatch: expected parent, got $role');
-        state = state.copyWith(
-          isLoading: false,
-          error: 'Unauthorized access.',
-        );
+        state = state.copyWith(isLoading: false, error: 'Unauthorized access.');
+        await _auth.signOut();
         return false;
       }
 
-      // Verify status
       final status = userData['status'] as String? ?? '';
       if (status.toLowerCase() != 'active') {
-        print('DEBUG: [ParentLogin] Account not active: $status');
-        state = state.copyWith(
-          isLoading: false,
-          error: 'Parent account not active. Please contact administrator.',
-        );
-        return false;
-      }
-
-      final storedHashedPassword = userData['password'] as String;
-      
-      // Verify password
-      final passwordBytes = utf8.encode(normalizedPassword);
-      final inputHashedPassword = sha256.convert(passwordBytes).toString();
-      
-      print('DEBUG: [ParentLogin] Hash check: ${inputHashedPassword.substring(0, 8)}... vs ${storedHashedPassword.substring(0, 8)}...');
-      
-      if (inputHashedPassword != storedHashedPassword) {
-        print('DEBUG: [ParentLogin] Password mismatch for $normalizedUsername');
-        state = state.copyWith(
-          isLoading: false,
-          error: 'Incorrect Password.',
-        );
+        state = state.copyWith(isLoading: false, error: 'Parent account not active. Please contact administrator.');
+        await _auth.signOut();
         return false;
       }
 
@@ -285,20 +266,6 @@ class AuthNotifier extends StateNotifier<AuthState> {
       final parentName = userData['parentName'] as String? ?? 'Parent';
       final studentId = userData['studentId'] as String? ?? '';
       final mustChangePassword = userData['mustChangePassword'] as bool? ?? false;
-
-      // SIGN IN ANONYMOUSLY to Firebase Auth so Firestore rules allow access
-      String uid = 'parent-$normalizedUsername';
-      try {
-        final cred = await _auth.signInAnonymously();
-        if (cred.user != null) {
-          uid = cred.user!.uid;
-          print('DEBUG: [ParentLogin] Firebase Anonymous Auth success: $uid');
-        }
-      } catch (e) {
-        print('DEBUG: [ParentLogin] Optional Firebase Auth failed, using local UID: $e');
-      }
-
-      print('DEBUG: [ParentLogin] Authentication Success for $normalizedUsername');
 
       // Create local session
       state = state.copyWith(
@@ -315,11 +282,21 @@ class AuthNotifier extends StateNotifier<AuthState> {
       );
       
       return true;
+    } on FirebaseAuthException catch (e) {
+      print('DEBUG: [ParentLogin] FirebaseAuthException: ${e.code}');
+      String errMsg = 'Login failed.';
+      if (e.code == 'user-not-found' || e.code == 'invalid-credential') {
+         errMsg = 'Invalid Username or Password.';
+      } else if (e.code == 'wrong-password') {
+         errMsg = 'Incorrect Password.';
+      }
+      state = state.copyWith(isLoading: false, error: errMsg);
+      return false;
     } catch (e) {
-      print('DEBUG: [ParentLogin] Error during authentication: $e');
+      print('DEBUG: [ParentLogin] General Error: $e');
       state = state.copyWith(
         isLoading: false,
-        error: 'Login failed: ${e.toString()}',
+        error: 'Login Error. Verify credentials.',
       );
       return false;
     }

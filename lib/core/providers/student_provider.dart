@@ -5,6 +5,8 @@ import 'package:crypto/crypto.dart';
 import 'dart:convert';
 import '../models/student_model.dart';
 import '../providers/auth_provider.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 final firestoreProvider = Provider((ref) => FirebaseFirestore.instance);
 
@@ -150,11 +152,51 @@ class StudentRepository {
     required String studentId,
     required String studentName,
   }) async {
+    // Attempt real Firebase Auth user creation so firestore.rules validates them later
+    String uid = username;
+    final emailForAuth = '${username.toLowerCase()}@hdpayment.preschool';
+    
+    try {
+      final tempApp = await Firebase.initializeApp(
+        name: 'tempAuthApp_${DateTime.now().millisecondsSinceEpoch}',
+        options: Firebase.app().options,
+      );
+      final tempAuth = FirebaseAuth.instanceFor(app: tempApp);
+      
+      try {
+        final cred = await tempAuth.createUserWithEmailAndPassword(
+          email: emailForAuth, 
+          password: password,
+        );
+        if (cred.user != null) {
+          uid = cred.user!.uid;
+        }
+      } catch (e) {
+        // If a parent with this email already exists, retrieve the UID by logging in
+        if (e.toString().contains('email-already-in-use')) {
+           final cred = await tempAuth.signInWithEmailAndPassword(
+             email: emailForAuth,
+             password: password,
+           );
+           if (cred.user != null) {
+             uid = cred.user!.uid;
+           }
+        } else {
+          print('DEBUG: Secondary Auth User creation error: $e');
+        }
+      }
+      await tempApp.delete();
+    } catch (e) {
+      print('DEBUG: Fatal Secondary Auth error: $e');
+    }
+
     final passwordBytes = utf8.encode(password);
     final hashedPassword = sha256.convert(passwordBytes).toString();
 
-    await _firestore.collection('users').doc(username).set({
-      'username': username,
+    // Use the actual Firebase Auth UID as the document ID!
+    await _firestore.collection('users').doc(uid).set({
+      'uid': uid,
+      'username': username.toLowerCase(),
       'password': hashedPassword,
       'parentName': parentName,
       'parentEmail': parentEmail,
@@ -163,7 +205,7 @@ class StudentRepository {
       'studentName': studentName,
       'role': 'parent',
       'status': 'active',
-      'mustChangePassword': true, // Force password change on first login
+      'mustChangePassword': true,
       'createdAt': FieldValue.serverTimestamp(),
     });
   }
