@@ -159,11 +159,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
             decoration: const BoxDecoration(
               color: Colors.white,
               shape: BoxShape.circle,
-            ),
-            child: Transform.scale(
-              scale: 2.2,
-              alignment: Alignment.center,
-              child: Image.asset('assets/images/logo.jpg', fit: BoxFit.contain),
+              image: DecorationImage(
+                image: AssetImage('assets/images/logo.jpg'),
+                fit: BoxFit.cover,
+              ),
             ),
           )
               .animate()
@@ -244,11 +243,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
               decoration: const BoxDecoration(
                 color: Colors.white,
                 shape: BoxShape.circle,
-              ),
-              child: Transform.scale(
-                scale: 2.2,
-                alignment: Alignment.center,
-                child: Image.asset('assets/images/logo.jpg', fit: BoxFit.contain),
+                image: DecorationImage(
+                  image: AssetImage('assets/images/logo.jpg'),
+                  fit: BoxFit.cover,
+                ),
               ),
             ),
             const SizedBox(height: 16),
