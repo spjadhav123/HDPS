@@ -12,6 +12,7 @@ import '../../shared/widgets/app_card.dart';
 import '../../shared/widgets/app_animations.dart';
 import '../../core/utils/app_date_utils.dart';
 import 'package:fl_chart/fl_chart.dart';
+import '../../shared/widgets/responsive_layout.dart';
 
 class AdminDashboard extends ConsumerWidget {
   const AdminDashboard({super.key});
@@ -24,7 +25,7 @@ class AdminDashboard extends ConsumerWidget {
     return Scaffold(
       backgroundColor: AppTheme.background,
       body: SingleChildScrollView(
-        padding: EdgeInsets.all(MediaQuery.of(context).size.width < 700 ? 16 : 24),
+        padding: EdgeInsets.all(ResponsiveLayout.isMobile(context) ? 16 : 24),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -55,8 +56,8 @@ class AdminDashboard extends ConsumerWidget {
                 final pendingAmount = totalDue - totalPaid;
                 final pendingStr = pendingAmount >= 1000 ? '₹${(pendingAmount/1000).toStringAsFixed(1)}k' : '₹${pendingAmount.toStringAsFixed(0)}';
 
-                final isMobile = MediaQuery.of(context).size.width < 700;
-                final isTablet = MediaQuery.of(context).size.width < 1100;
+                final isMobile = ResponsiveLayout.isMobile(context);
+                final isTablet = ResponsiveLayout.isTablet(context);
 
                 return Column(
                   children: [

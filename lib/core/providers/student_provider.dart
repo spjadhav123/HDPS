@@ -155,7 +155,7 @@ class StudentRepository {
     // Attempt real Firebase Auth user creation so firestore.rules validates them later
     String uid = username;
     final safeEmailPrefix = username.toLowerCase().replaceAll(RegExp(r'[^a-z0-9]'), '');
-    final emailForAuth = '${safeEmailPrefix}_${password}@hdpayment.preschool';
+    final emailForAuth = '${safeEmailPrefix}_$password@hdpayment.preschool';
     
     try {
       final tempApp = await Firebase.initializeApp(

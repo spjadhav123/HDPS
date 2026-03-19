@@ -7,6 +7,7 @@ import '../../shared/widgets/page_header.dart';
 import '../../core/providers/auth_provider.dart';
 import '../../core/providers/student_provider.dart';
 import 'package:go_router/go_router.dart';
+import '../../shared/widgets/responsive_layout.dart';
 
 class ParentDashboard extends ConsumerWidget {
   const ParentDashboard({super.key});
@@ -30,7 +31,23 @@ class ParentDashboard extends ConsumerWidget {
             ),
             const SizedBox(height: 24),
             childAsync.when(
-              data: (student) => _buildChildCard(context, student),
+              data: (student) => ResponsiveLayout(
+                mobile: Column(
+                  children: [
+                    _buildChildCard(context, student),
+                    const SizedBox(height: 20),
+                    _buildQuickActions(context),
+                  ],
+                ),
+                desktop: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Expanded(flex: 2, child: _buildChildCard(context, student)),
+                    const SizedBox(width: 24),
+                    Expanded(flex: 3, child: _buildQuickActions(context)),
+                  ],
+                ),
+              ),
               loading: () => const Center(
                 child: CircularProgressIndicator(),
               ),
@@ -38,9 +55,7 @@ class ParentDashboard extends ConsumerWidget {
                 child: Text('Error loading child: $err'),
               ),
             ),
-            const SizedBox(height: 20),
-            _buildQuickActions(context),
-            const SizedBox(height: 20),
+            const SizedBox(height: 24),
             _buildAnnouncements(),
           ],
         ),

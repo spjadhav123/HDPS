@@ -6,6 +6,7 @@ import '../../core/theme/app_theme.dart';
 import '../../core/providers/auth_provider.dart';
 import '../../core/constants/app_constants.dart';
 import '../../shared/widgets/app_animations.dart';
+import '../../shared/widgets/responsive_layout.dart';
 
 class LoginScreen extends ConsumerStatefulWidget {
   const LoginScreen({super.key});
@@ -85,38 +86,57 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   @override
   Widget build(BuildContext context) {
     final authState = ref.watch(authProvider);
-    final size = MediaQuery.of(context).size;
-    final isWide = size.width > 900;
 
     return Scaffold(
-      body: Row(
-        children: [
-          if (isWide)
-            Expanded(
-              child: _buildBranding()
-                  .animate()
-                  .fadeIn(duration: 600.ms)
-                  .slideX(begin: -0.1),
-            ),
-          Expanded(
-            child: Container(
-              color: Colors.white,
-              child: Center(
-                child: SingleChildScrollView(
-                  padding: const EdgeInsets.all(40),
-                  child: ConstrainedBox(
-                    constraints: const BoxConstraints(maxWidth: 420),
-                    child: _buildForm(authState, isWide)
-                        .animate()
-                        .fadeIn(duration: 500.ms, delay: 200.ms)
-                        .slideY(begin: 0.05),
-                  ),
+      body: ResponsiveLayout(
+        mobile: _buildMobileLayout(authState),
+        desktop: _buildDesktopLayout(authState),
+      ),
+    );
+  }
+
+  Widget _buildMobileLayout(AuthState authState) {
+    return Container(
+      color: Colors.white,
+      child: Center(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(32),
+          child: _buildForm(authState, false)
+              .animate()
+              .fadeIn(duration: 500.ms)
+              .slideY(begin: 0.05),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildDesktopLayout(AuthState authState) {
+    return Row(
+      children: [
+        Expanded(
+          child: _buildBranding()
+              .animate()
+              .fadeIn(duration: 600.ms)
+              .slideX(begin: -0.1),
+        ),
+        Expanded(
+          child: Container(
+            color: Colors.white,
+            child: Center(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.all(40),
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 420),
+                  child: _buildForm(authState, true)
+                      .animate()
+                      .fadeIn(duration: 500.ms, delay: 200.ms)
+                      .slideY(begin: 0.05),
                 ),
               ),
             ),
           ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 

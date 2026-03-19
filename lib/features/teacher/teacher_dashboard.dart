@@ -7,6 +7,7 @@ import '../../shared/widgets/page_header.dart';
 import '../../shared/widgets/app_animations.dart';
 import '../../core/providers/student_provider.dart';
 import '../../core/models/student_model.dart';
+import '../../shared/widgets/responsive_layout.dart';
 
 class TeacherDashboard extends ConsumerWidget {
   const TeacherDashboard({super.key});
@@ -69,9 +70,24 @@ class TeacherDashboard extends ConsumerWidget {
               );
             }),
             const SizedBox(height: 24),
-            _buildTodaySchedule(),
-            const SizedBox(height: 24),
-            _buildStudentsList(studentsAsync),
+            ResponsiveLayout(
+              mobile: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  _buildTodaySchedule(),
+                  const SizedBox(height: 24),
+                  _buildStudentsList(studentsAsync),
+                ],
+              ),
+              desktop: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Expanded(flex: 2, child: _buildTodaySchedule()),
+                  const SizedBox(width: 24),
+                  Expanded(flex: 3, child: _buildStudentsList(studentsAsync)),
+                ],
+              ),
+            ),
           ],
         ),
       ),
