@@ -332,7 +332,7 @@ class _SendNotificationDialogState
                 ),
                 const SizedBox(height: 12),
                 DropdownButtonFormField<NotificationType>(
-                  value: _type,
+                  initialValue: _type,
                   decoration:
                       const InputDecoration(labelText: 'Type'),
                   items: NotificationType.values
@@ -348,7 +348,7 @@ class _SendNotificationDialogState
                 ),
                 const SizedBox(height: 12),
                 DropdownButtonFormField<String>(
-                  value: _targetRole,
+                  initialValue: _targetRole,
                   decoration: const InputDecoration(
                       labelText: 'Send To'),
                   items: const [

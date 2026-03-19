@@ -444,7 +444,7 @@ class _AddEventDialogState
                 ),
                 const SizedBox(height: 12),
                 DropdownButtonFormField<EventCategory>(
-                  value: _category,
+                  initialValue: _category,
                   decoration:
                       const InputDecoration(labelText: 'Category'),
                   items: EventCategory.values

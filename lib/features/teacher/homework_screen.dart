@@ -364,7 +364,7 @@ class _AddHomeworkDialogState
                 ),
                 const SizedBox(height: 12),
                 DropdownButtonFormField<String>(
-                  value: _selectedClass,
+                  initialValue: _selectedClass,
                   decoration:
                       const InputDecoration(labelText: 'Class *'),
                   items: _classes
