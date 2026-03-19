@@ -424,6 +424,7 @@ class _DashboardShellState extends ConsumerState<DashboardShell>
           const NavItem('Fees', '/admin/fees', Icons.payments_rounded),
           const NavItem('Gallery', '/gallery', Icons.photo_library_rounded),
           const NavItem('Events', '/events', Icons.event_rounded),
+          const NavItem('Gravity Fun', '/anti-gravity', Icons.sports_esports_rounded),
         ];
       case AppConstants.roleTeacher:
         return [
@@ -433,6 +434,7 @@ class _DashboardShellState extends ConsumerState<DashboardShell>
           const NavItem('Gradebook', '/teacher/gradebook', Icons.grade_rounded),
           const NavItem('Homework', '/teacher/homework', Icons.assignment_rounded),
           const NavItem('Gallery', '/gallery', Icons.photo_library_rounded),
+          const NavItem('Gravity Fun', '/anti-gravity', Icons.sports_esports_rounded),
         ];
       case AppConstants.roleParent:
         return [
@@ -443,6 +445,7 @@ class _DashboardShellState extends ConsumerState<DashboardShell>
           const NavItem('Fees', '/parent/fees', Icons.payments_rounded),
           const NavItem('Homework', '/parent/homework', Icons.book_rounded),
           const NavItem('Gallery', '/gallery', Icons.photo_library_rounded),
+          const NavItem('Gravity Fun', '/anti-gravity', Icons.sports_esports_rounded),
         ];
       case AppConstants.roleAccountant:
         return [

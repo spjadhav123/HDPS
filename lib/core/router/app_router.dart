@@ -30,6 +30,7 @@ import '../../features/notifications/notification_center.dart';
 import '../../features/events/events_screen.dart';
 import '../../features/chat/chat_screen.dart';
 import '../../features/gallery/gallery_screen.dart';
+import '../../features/activities/anti_gravity_game.dart';
 
 // ─────────────────────────────────────────────────────────────
 // Page transition builder — smooth fade+slide up
@@ -238,6 +239,10 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           GoRoute(
             path: '/gallery',
             pageBuilder: (context, state) => _buildSubPage(context, state, const GalleryScreen()),
+          ),
+          GoRoute(
+            path: '/anti-gravity',
+            pageBuilder: (context, state) => _buildSubPage(context, state, const AntiGravityGame()),
           ),
         ],
       ),
