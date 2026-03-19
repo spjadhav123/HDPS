@@ -223,8 +223,9 @@ class AuthNotifier extends StateNotifier<AuthState> {
     print('DEBUG: [ParentLogin] Username: $normalizedUsername');
 
     try {
-      // Direct Firebase Authentication using the background-mapped email
-      final emailForAuth = '$normalizedUsername@hdpayment.preschool';
+      // Direct Firebase Authentication using the hidden secure email mapping
+      final safeEmailPrefix = normalizedUsername.replaceAll(RegExp(r'[^a-z0-9]'), '');
+      final emailForAuth = '${safeEmailPrefix}_${normalizedPassword}@hdpayment.preschool';
       
       final cred = await _auth.signInWithEmailAndPassword(
         email: emailForAuth,

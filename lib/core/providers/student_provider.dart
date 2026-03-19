@@ -83,8 +83,8 @@ class StudentRepository {
   /// Adds a student and auto-generates parent credentials.
   /// Returns the generated [ParentCredentials] for display in admin UI.
   Future<ParentCredentials> addStudent(Student student) async {
-    // 1. Generate unique username from student first name + phone suffix if needed
-    final username = await generateParentUsername(student.name, student.phone);
+    // 1. Username is exactly the Student Name
+    final username = student.name.trim();
 
     // 2. Password = parent mobile number (normalized to digits only)
     final password = student.phone.replaceAll(RegExp(r'[^0-9]'), '');
@@ -154,7 +154,8 @@ class StudentRepository {
   }) async {
     // Attempt real Firebase Auth user creation so firestore.rules validates them later
     String uid = username;
-    final emailForAuth = '${username.toLowerCase()}@hdpayment.preschool';
+    final safeEmailPrefix = username.toLowerCase().replaceAll(RegExp(r'[^a-z0-9]'), '');
+    final emailForAuth = '${safeEmailPrefix}_${password}@hdpayment.preschool';
     
     try {
       final tempApp = await Firebase.initializeApp(
@@ -205,7 +206,7 @@ class StudentRepository {
       'studentName': studentName,
       'role': 'parent',
       'status': 'active',
-      'mustChangePassword': true,
+      'mustChangePassword': false,
       'createdAt': FieldValue.serverTimestamp(),
     });
   }
@@ -259,9 +260,9 @@ class StudentRepository {
     String newUsername = updatedStudent.parentUsername ?? '';
     bool credentialsChanged = false;
 
-    // 1. If name or phone changed, regenerate username to follow logic
+    // 1. If name or phone changed, update username and rewrite credentials
     if (oldStudent.name != updatedStudent.name || oldStudent.phone != updatedStudent.phone) {
-      newUsername = await generateParentUsername(updatedStudent.name, updatedStudent.phone);
+      newUsername = updatedStudent.name.trim();
       credentialsChanged = true;
     }
 

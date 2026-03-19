@@ -265,11 +265,11 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
           AnimatedFocusField(
             controller: _emailController,
-            labelText: 'Username',
+            labelText: 'Student Name (Username)',
             prefixIcon: const Icon(Icons.person_outlined, size: 20),
-            hintText: 'Enter your username',
+            hintText: 'Enter the exact student name',
             validator: (v) {
-              if (v == null || v.trim().isEmpty) return 'Enter your username';
+              if (v == null || v.trim().isEmpty) return 'Enter the student name';
               return null;
             },
           ).animate().fadeIn(duration: 300.ms, delay: 280.ms).slideY(begin: 0.06, curve: Curves.easeOut),
@@ -278,9 +278,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
           AnimatedFocusField(
             controller: _aadhaarController,
             obscureText: _obscurePassword,
-            labelText: 'Password',
+            labelText: 'Mobile Number (Password)',
             prefixIcon: const Icon(Icons.lock_outline, size: 20),
-            hintText: 'Enter your password',
+            hintText: 'Enter registered mobile number',
             suffixIcon: IconButton(
               icon: Icon(_obscurePassword
                   ? Icons.visibility_outlined
