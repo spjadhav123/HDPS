@@ -2,6 +2,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import 'package:go_router/go_router.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/providers/student_provider.dart';
 // import '../../core/providers/attendance_provider.dart';
@@ -128,7 +129,7 @@ class AdminDashboard extends ConsumerWidget {
                     ],
                     const SizedBox(height: 24),
 
-                    if (isTablet) ...[
+                    if (isMobile || isTablet) ...[
                       AppCard(
                         title: 'Enrollment by Class',
                         child: SizedBox(
@@ -280,14 +281,14 @@ class AdminDashboard extends ConsumerWidget {
                 .fadeIn(duration: 350.ms, delay: 200.ms)
                 .slideX(begin: -0.05, curve: Curves.easeOut),
             const SizedBox(height: 12),
-            const Wrap(
+            Wrap(
               spacing: 12,
               runSpacing: 12,
               children: [
-                _QuickAction(icon: Icons.person_add_rounded, label: 'Add Student', color: Colors.blue, animDelay: 220),
-                _QuickAction(icon: Icons.campaign_rounded, label: 'Send Notice', color: Colors.orange, animDelay: 290),
-                _QuickAction(icon: Icons.receipt_long_rounded, label: 'Fee Receipt', color: Colors.green, animDelay: 360),
-                _QuickAction(icon: Icons.calendar_month_rounded, label: 'Academic Calendar', color: Colors.purple, animDelay: 430),
+                _QuickAction(icon: Icons.person_add_rounded, label: 'Add Student', color: Colors.blue, animDelay: 220, onTap: () => context.push('/admin/students')),
+                _QuickAction(icon: Icons.campaign_rounded, label: 'Send Notice', color: Colors.orange, animDelay: 290, onTap: () => context.push('/notifications')),
+                _QuickAction(icon: Icons.receipt_long_rounded, label: 'Fee Receipt', color: Colors.green, animDelay: 360, onTap: () => context.push('/admin/fees')),
+                _QuickAction(icon: Icons.calendar_month_rounded, label: 'Academic Calendar', color: Colors.purple, animDelay: 430, onTap: () => context.push('/events')),
               ],
             ),
           ],
@@ -302,11 +303,13 @@ class _QuickAction extends StatefulWidget {
   final String label;
   final Color color;
   final int animDelay;
+  final VoidCallback onTap;
 
   const _QuickAction({
     required this.icon,
     required this.label,
     required this.color,
+    required this.onTap,
     this.animDelay = 0,
   });
 
@@ -332,7 +335,7 @@ class _QuickActionState extends State<_QuickAction> {
           elevation: _hovered ? 6 : 1,
           shadowColor: widget.color.withAlpha(64),
           child: InkWell(
-            onTap: () {},
+            onTap: widget.onTap,
             borderRadius: BorderRadius.circular(16),
             hoverColor: widget.color.withAlpha(15),
             splashColor: widget.color.withAlpha(30),
