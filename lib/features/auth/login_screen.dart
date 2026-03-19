@@ -155,16 +155,15 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
           Container(
             width: 160,
             height: 160,
+            clipBehavior: Clip.antiAlias,
             decoration: const BoxDecoration(
               color: Colors.white,
               shape: BoxShape.circle,
             ),
-            child: ClipOval(
-              child: Transform.scale(
-                scale: 2.2,
-                alignment: Alignment.center,
-                child: Image.asset('assets/images/logo.jpg', fit: BoxFit.contain),
-              ),
+            child: Transform.scale(
+              scale: 2.2,
+              alignment: Alignment.center,
+              child: Image.asset('assets/images/logo.jpg', fit: BoxFit.contain),
             ),
           )
               .animate()
@@ -173,10 +172,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 end: const Offset(1.0, 1.0),
                 duration: 600.ms,
                 curve: Curves.elasticOut,
-              )
-              .then(delay: 1000.ms)
-              .animate(onPlay: (c) => c.repeat(reverse: true))
-              .scaleXY(end: 1.04, duration: 1800.ms, curve: Curves.easeInOut),
+              ),
           const SizedBox(height: 32),
           const Text(
             'HD Preprimary School',
@@ -242,16 +238,17 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
         children: [
           if (!isWide) ...[
             Container(
+              width: 80,
+              height: 80,
+              clipBehavior: Clip.antiAlias,
               decoration: const BoxDecoration(
                 color: Colors.white,
                 shape: BoxShape.circle,
               ),
-              child: ClipOval(
-                child: Transform.scale(
-                  scale: 2.2,
-                  alignment: Alignment.center,
-                  child: Image.asset('assets/images/logo.jpg', height: 80, width: 80, fit: BoxFit.contain),
-                ),
+              child: Transform.scale(
+                scale: 2.2,
+                alignment: Alignment.center,
+                child: Image.asset('assets/images/logo.jpg', fit: BoxFit.contain),
               ),
             ),
             const SizedBox(height: 16),
