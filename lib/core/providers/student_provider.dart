@@ -310,7 +310,7 @@ class StudentRepository {
               final pass = updatedStudent.phone.replaceAll(RegExp(r'[^0-9]'), '');
               final passwordBytes = utf8.encode(pass);
               updates['password'] = sha256.convert(passwordBytes).toString();
-              updates['mustChangePassword'] = true;
+              updates['mustChangePassword'] = false;
            }
            await credRef.update(updates);
         } else {

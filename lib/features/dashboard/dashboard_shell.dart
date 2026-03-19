@@ -88,12 +88,6 @@ class _DashboardShellState extends ConsumerState<DashboardShell>
     final navItems = _getNavItems(user.role);
     final currentPath = GoRouterState.of(context).matchedLocation;
 
-    // Force password change for parents on first login
-    if (user.role == AppConstants.roleParent && user.mustChangePassword == true) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        _showForceChangePasswordDialog(context);
-      });
-    }
 
     return Scaffold(
       key: _scaffoldKey,
