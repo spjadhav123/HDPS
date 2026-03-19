@@ -369,7 +369,7 @@ class _StudentsScreenState extends ConsumerState<StudentsScreen> {
                   ),
                   const SizedBox(height: 16),
                   DropdownButtonFormField<String>(
-                    initialValue: selectedClass,
+                    value: selectedClass,
                     decoration: const InputDecoration(
                       labelText: 'Class',
                       prefixIcon: Icon(Icons.school_outlined, size: 18),
@@ -606,14 +606,14 @@ class _StudentsScreenState extends ConsumerState<StudentsScreen> {
                   ),
                   const SizedBox(height: 16),
                   DropdownButtonFormField<String>(
-                    initialValue: selectedClass,
+                    value: selectedClass,
                     decoration: const InputDecoration(labelText: 'Class', prefixIcon: Icon(Icons.school_outlined, size: 18)),
                     items: ['Playgroup', 'Nursery', 'Jr. KG', 'Sr. KG'].map((c) => DropdownMenuItem(value: c, child: Text(c))).toList(),
                     onChanged: (v) => v != null ? setDialogState(() => selectedClass = v) : null,
                   ),
                   const SizedBox(height: 16),
                   DropdownButtonFormField<String>(
-                    initialValue: selectedStatus,
+              value: selectedStatus,
                     decoration: const InputDecoration(labelText: 'Status', prefixIcon: Icon(Icons.info_outline_rounded, size: 18)),
                     items: ['Active', 'Pending', 'Inactive'].map((s) => DropdownMenuItem(value: s, child: Text(s))).toList(),
                     onChanged: (v) => v != null ? setDialogState(() => selectedStatus = v) : null,

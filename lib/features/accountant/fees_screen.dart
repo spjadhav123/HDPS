@@ -323,7 +323,7 @@ class _AddPaymentDialogState extends ConsumerState<_AddPaymentDialog> {
             ),
             const SizedBox(height: 16),
             DropdownButtonFormField<String>(
-              initialValue: _selectedMode,
+              value: _selectedMode,
               decoration: const InputDecoration(labelText: 'Payment Mode', prefixIcon: Icon(Icons.payment_rounded)),
               items: ['Cash', 'UPI', 'Bank Transfer', 'Card'].map((m) => DropdownMenuItem(value: m, child: Text(m))).toList(),
               onChanged: (v) => setState(() => _selectedMode = v ?? 'Cash'),
