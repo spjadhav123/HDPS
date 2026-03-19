@@ -165,14 +165,14 @@ class ParentDashboard extends ConsumerWidget {
         mainAxisSpacing: 12,
         childAspectRatio: 1.3,
       ),
-        children: actions.asMap().entries.map((e) {
+      children: actions.asMap().entries.map((e) {
           final a = e.value;
           return InkWell(
             onTap: () {
               if (a.$4.isNotEmpty) {
                  context.go(a.$4);
               } else {
-                ScaffoldMessenger.of(ctx).showSnackBar(SnackBar(
+                ScaffoldMessenger.of(context).showSnackBar(SnackBar(
                   content: Text('${a.$1} coming soon'),
                   behavior: SnackBarBehavior.floating,
                 ));
@@ -201,7 +201,7 @@ class ParentDashboard extends ConsumerWidget {
               ),
             ),
           ).animate(delay: Duration(milliseconds: e.key * 80)).fadeIn().scale(begin: const Offset(0.95, 0.95));
-      ],
+      }).toList(),
     );
   }
 
