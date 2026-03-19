@@ -1,12 +1,13 @@
 {
-  "outputDirectory": "dist-web",
-  "framework": null,
-  "installCommand": "npm install",
-  "buildCommand": "mkdir -p dist-web && cp -R build/web/* dist-web/",
   "cleanUrls": true,
   "routes": [
-    { "src": "/api/(.*)", "dest": "/api" },
-    { "handle": "filesystem" },
-    { "src": "/(.*)", "dest": "/index.html" }
+    { "src": "/api/(.*)", "dest": "/api/index.js" },
+    { "src": "/assets/(.*)", "dest": "/build/web/assets/$1" },
+    { "src": "/canvaskit/(.*)", "dest": "/build/web/canvaskit/$1" },
+    { "src": "/icons/(.*)", "dest": "/build/web/icons/$1" },
+    { "src": "/(.*\\.js)", "dest": "/build/web/$1" },
+    { "src": "/(.*\\.png)", "dest": "/build/web/$1" },
+    { "src": "/(.*\\.json)", "dest": "/build/web/$1" },
+    { "src": "/(.*)", "dest": "/build/web/index.html" }
   ]
 }
