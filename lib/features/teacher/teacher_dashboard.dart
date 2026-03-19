@@ -29,16 +29,17 @@ class TeacherDashboard extends ConsumerWidget {
               subtitle: 'Class: Nursery A | Today: Monday, 3 Mar 2026',
             ),
             const SizedBox(height: 24),
-            LayoutBuilder(builder: (ctx, c) {
-              final cols = c.maxWidth > 700 ? 3 : 1;
-              return GridView.count(
-                crossAxisCount: cols,
-                shrinkWrap: true,
-                physics: const NeverScrollableScrollPhysics(),
+            GridView(
+              padding: EdgeInsets.zero,
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
+                maxCrossAxisExtent: 320,
                 crossAxisSpacing: 16,
                 mainAxisSpacing: 16,
-                childAspectRatio: 1.8,
-                children: [
+                childAspectRatio: 1.6,
+              ),
+              children: [
                   StatCard(
                     title: 'Students (All)',
                     value: studentsAsync.maybeWhen(
@@ -67,8 +68,7 @@ class TeacherDashboard extends ConsumerWidget {
                     animDelay: 200,
                   ),
                 ],
-              );
-            }),
+            ),
             const SizedBox(height: 24),
             ResponsiveLayout(
               mobile: Column(

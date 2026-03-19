@@ -62,71 +62,43 @@ class AdminDashboard extends ConsumerWidget {
 
                 return Column(
                   children: [
-                    if (isMobile) ...[
-                      StatCard(
-                        title: 'Total Students',
-                        value: '$total',
-                        icon: Icons.people_rounded,
-                        color: AppTheme.primary,
-                        trend: '+4% from last month',
-                        animDelay: 0,
+                    GridView(
+                      padding: EdgeInsets.zero,
+                      shrinkWrap: true,
+                      physics: const NeverScrollableScrollPhysics(),
+                      gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
+                        maxCrossAxisExtent: 320,
+                        crossAxisSpacing: 16,
+                        mainAxisSpacing: 16,
+                        childAspectRatio: 1.6,
                       ),
-                      const SizedBox(height: 12),
-                      const StatCard(
-                        title: 'Daily Attendance',
-                        value: '92%',
-                        icon: Icons.how_to_reg_rounded,
-                        color: AppTheme.accent,
-                        trend: 'Normal',
-                        animDelay: 80,
-                      ),
-                      const SizedBox(height: 12),
-                      StatCard(
-                        title: 'Pending Fees',
-                        value: pendingStr,
-                        icon: Icons.payments_rounded,
-                        color: AppTheme.secondary,
-                        trend: '$pendingPayments payments due',
-                        animDelay: 160,
-                      ),
-                    ] else ...[
-                      Row(
-                        children: [
-                          Expanded(
-                            child: StatCard(
-                              title: 'Total Students',
-                              value: '$total',
-                              icon: Icons.people_rounded,
-                              color: AppTheme.primary,
-                              trend: '+4% from last month',
-                              animDelay: 0,
-                            ),
-                          ),
-                          const SizedBox(width: 16),
-                          const Expanded(
-                            child: StatCard(
-                              title: 'Daily Attendance',
-                              value: '92%',
-                              icon: Icons.how_to_reg_rounded,
-                              color: AppTheme.accent,
-                              trend: 'Normal',
-                              animDelay: 80,
-                            ),
-                          ),
-                          const SizedBox(width: 16),
-                          Expanded(
-                            child: StatCard(
-                              title: 'Pending Fees',
-                              value: pendingStr,
-                              icon: Icons.payments_rounded,
-                              color: AppTheme.secondary,
-                              trend: '$pendingPayments payments due',
-                              animDelay: 160,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
+                      children: [
+                        StatCard(
+                          title: 'Total Students',
+                          value: '$total',
+                          icon: Icons.people_rounded,
+                          color: AppTheme.primary,
+                          trend: '+4% from last month',
+                          animDelay: 0,
+                        ),
+                        const StatCard(
+                          title: 'Daily Attendance',
+                          value: '92%',
+                          icon: Icons.how_to_reg_rounded,
+                          color: AppTheme.accent,
+                          trend: 'Normal',
+                          animDelay: 80,
+                        ),
+                        StatCard(
+                          title: 'Pending Fees',
+                          value: pendingStr,
+                          icon: Icons.payments_rounded,
+                          color: AppTheme.secondary,
+                          trend: '$pendingPayments payments due',
+                          animDelay: 160,
+                        ),
+                      ],
+                    ),
                     const SizedBox(height: 24),
 
                     if (isMobile || isTablet) ...[

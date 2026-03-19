@@ -155,15 +155,16 @@ class ParentDashboard extends ConsumerWidget {
       ('Message Teacher', Icons.message_rounded, AppTheme.secondary, ''),
     ];
 
-    return LayoutBuilder(builder: (ctx, c) {
-      final cols = c.maxWidth > 600 ? 4 : 2;
-      return GridView.count(
-        crossAxisCount: cols,
-        shrinkWrap: true,
-        physics: const NeverScrollableScrollPhysics(),
+    return GridView(
+      padding: EdgeInsets.zero,
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
+        maxCrossAxisExtent: 260,
         crossAxisSpacing: 12,
         mainAxisSpacing: 12,
-        childAspectRatio: 1.4,
+        childAspectRatio: 1.3,
+      ),
         children: actions.asMap().entries.map((e) {
           final a = e.value;
           return InkWell(
@@ -200,9 +201,8 @@ class ParentDashboard extends ConsumerWidget {
               ),
             ),
           ).animate(delay: Duration(milliseconds: e.key * 80)).fadeIn().scale(begin: const Offset(0.95, 0.95));
-        }).toList(),
-      );
-    });
+      ],
+    );
   }
 
   Widget _buildAnnouncements() {

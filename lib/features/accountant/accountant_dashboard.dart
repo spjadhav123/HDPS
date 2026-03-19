@@ -45,22 +45,23 @@ class AccountantDashboard extends ConsumerWidget {
                 final pendingStr = NumberFormat.compactCurrency(symbol: '₹', decimalDigits: 1).format(totalDue - totalPaid);
                 final percent = totalDue > 0 ? (totalPaid / totalDue * 100).toStringAsFixed(1) : '0';
 
-                return LayoutBuilder(builder: (ctx, c) {
-                  return GridView.count(
-                    crossAxisCount: c.maxWidth > 800 ? 4 : c.maxWidth > 500 ? 2 : 1,
-                    shrinkWrap: true,
-                    physics: const NeverScrollableScrollPhysics(),
+                return GridView(
+                  padding: EdgeInsets.zero,
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
+                    maxCrossAxisExtent: 320,
                     crossAxisSpacing: 16,
                     mainAxisSpacing: 16,
-                    childAspectRatio: 1.8,
-                    children: [
+                    childAspectRatio: 1.6,
+                  ),
+                  children: [
                       StatCard(title: 'Total Fees Due', value: totalStr, icon: Icons.receipt_long_rounded, color: AppTheme.primary, animDelay: 0),
                       StatCard(title: 'Collected', value: paidStr, icon: Icons.payments_rounded, color: const Color(0xFF22C55E), trend: '$percent%', animDelay: 100),
                       StatCard(title: 'Pending', value: pendingStr, icon: Icons.pending_actions_rounded, color: AppTheme.warning, trend: '$pendingCount students', animDelay: 200),
                       const StatCard(title: 'Verify Status', value: 'Active', icon: Icons.verified_user_rounded, color: AppTheme.secondary, trend: 'Gateway Connected', animDelay: 300),
-                    ],
-                  );
-                });
+                  ],
+                );
               },
               loading: () => const ShimmerListView(itemCount: 1, itemHeight: 90),
               error: (err, _) => Text('Error loading stats: $err'),
