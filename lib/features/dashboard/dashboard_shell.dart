@@ -7,6 +7,7 @@ import '../../core/theme/app_theme.dart';
 import '../../core/providers/auth_provider.dart';
 import '../../core/constants/app_constants.dart';
 import '../../core/providers/notification_provider.dart';
+import '../../shared/widgets/responsive_layout.dart';
 
 class NavItem {
   final String label;
@@ -91,12 +92,15 @@ class _DashboardShellState extends ConsumerState<DashboardShell>
 
     return Scaffold(
       key: _scaffoldKey,
-      drawer: MediaQuery.of(context).size.width < 1100
+      drawer: ResponsiveLayout.isMobile(context)
           ? Drawer(child: _buildSidebar(user, roleColor, navItems, currentPath, unreadCount))
+          : null,
+      bottomNavigationBar: ResponsiveLayout.isMobile(context)
+          ? _buildBottomNav(roleColor, navItems, currentPath, user, unreadCount)
           : null,
       body: Row(
         children: [
-          if (MediaQuery.of(context).size.width >= 1100)
+          if (!ResponsiveLayout.isMobile(context))
             _buildSidebar(user, roleColor, navItems, currentPath, unreadCount)
                 .animate()
                 .fadeIn(duration: 350.ms),
@@ -137,11 +141,6 @@ class _DashboardShellState extends ConsumerState<DashboardShell>
       ),
       child: Row(
         children: [
-          if (MediaQuery.of(context).size.width < 1100)
-            IconButton(
-              onPressed: () => _scaffoldKey.currentState?.openDrawer(),
-              icon: const Icon(Icons.menu_rounded),
-            ),
           const Spacer(),
           Stack(
             children: [
@@ -228,7 +227,11 @@ class _DashboardShellState extends ConsumerState<DashboardShell>
 
   Widget _buildSidebarHeader() {
     return GestureDetector(
-      onTap: () => setState(() => _sidebarExpanded = !_sidebarExpanded),
+      onTap: () {
+        if (!ResponsiveLayout.isMobile(context)) {
+          setState(() => _sidebarExpanded = !_sidebarExpanded);
+        }
+      },
       child: Container(
         padding: const EdgeInsets.all(24),
         child: Row(
@@ -452,6 +455,45 @@ class _DashboardShellState extends ConsumerState<DashboardShell>
     }
   }
 
+
+  Widget _buildBottomNav(Color roleColor, List<NavItem> items, String currentPath, AuthUser user, int unreadCount) {
+    final bool needsMenu = items.length > 4;
+    final int maxVisible = needsMenu ? 3 : 4;
+    final visibleItems = items.take(maxVisible).toList();
+    
+    int currentIndex = visibleItems.indexWhere((item) => 
+        currentPath == item.path || (item.path != '/admin' && currentPath.startsWith(item.path)));
+    
+    if (currentIndex == -1 && !needsMenu) currentIndex = 0;
+
+    return NavigationBar(
+      selectedIndex: currentIndex == -1 ? maxVisible : currentIndex,
+      onDestinationSelected: (index) {
+        if (needsMenu && index == maxVisible) {
+          _scaffoldKey.currentState?.openDrawer();
+        } else {
+          context.go(visibleItems[index].path);
+        }
+      },
+      backgroundColor: Colors.white,
+      indicatorColor: roleColor.withOpacity(0.2),
+      destinations: [
+        ...visibleItems.map((item) {
+          return NavigationDestination(
+            icon: Icon(item.icon, color: AppTheme.textSecondary),
+            selectedIcon: Icon(item.icon, color: roleColor),
+            label: item.label,
+          );
+        }),
+        if (needsMenu)
+          NavigationDestination(
+            icon: const Icon(Icons.menu_rounded, color: AppTheme.textSecondary),
+            selectedIcon: Icon(Icons.menu_rounded, color: roleColor),
+            label: 'Menu',
+          ),
+      ],
+    );
+  }
 
   void _showForceChangePasswordDialog(BuildContext context) {
     // Check if it's already showing
