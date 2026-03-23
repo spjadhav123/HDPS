@@ -310,7 +310,6 @@ class _StudentsScreenState extends ConsumerState<StudentsScreen> {
 
   void _showAddStudentDialog(BuildContext context) {
     final nameController = TextEditingController();
-    final aadhaarController = TextEditingController();
     final parentController = TextEditingController();
     final parentEmailController = TextEditingController();
     final phoneController = TextEditingController();
@@ -334,15 +333,6 @@ class _StudentsScreenState extends ConsumerState<StudentsScreen> {
                     labelText: 'Full Name',
                     hintText: 'Enter student\'s full name',
                     prefixIcon: const Icon(Icons.person_outline, size: 18),
-                  ),
-                  const SizedBox(height: 16),
-                  AnimatedFocusField(
-                    controller: aadhaarController,
-                    labelText: 'Aadhaar Number',
-                    hintText: 'Enter 12-digit Aadhaar number',
-                    keyboardType: TextInputType.number,
-                    maxLength: 12,
-                    prefixIcon: const Icon(Icons.credit_card_outlined, size: 18),
                   ),
                   const SizedBox(height: 16),
                   AnimatedFocusField(
@@ -404,25 +394,17 @@ class _StudentsScreenState extends ConsumerState<StudentsScreen> {
                         );
                         return;
                       }
-                      if (aadhaarController.text.trim().isEmpty) {
-                        AppToast.show(
-                          builderContext,
-                          message: 'Please enter Aadhaar number',
-                          type: ToastType.warning,
-                        );
-                        return;
-                      }
 
                       setDialogState(() => isSaving = true);
 
                       try {
                         final className = selectedClass;
                         final studentName = nameController.text.trim();
-                        final aadhaarNumber = aadhaarController.text.trim();
+                        final phoneNumber = phoneController.text.trim();
 
                         final studentCode = await ref
                             .read(studentRepositoryProvider)
-                            .generateStudentCode(className, studentName, aadhaarNumber);
+                            .generateStudentCode(className, studentName, phoneNumber);
 
                         double calculateFees(String selected) {
                           if (selected == 'Playgroup') return 12000;
@@ -437,7 +419,6 @@ class _StudentsScreenState extends ConsumerState<StudentsScreen> {
                           studentCode: studentCode,
                           name: studentName,
                           className: className,
-                          aadhaarNumber: aadhaarNumber,
                           parent: parentController.text.trim(),
                           parentEmail: parentEmailController.text.trim(),
                           phone: phoneController.text.trim(),
@@ -553,7 +534,6 @@ class _StudentsScreenState extends ConsumerState<StudentsScreen> {
   }
   void _showEditStudentDialog(BuildContext context, Student student) {
     final nameController = TextEditingController(text: student.name);
-    final aadhaarController = TextEditingController(text: student.aadhaarNumber);
     final parentController = TextEditingController(text: student.parent);
     final parentEmailController = TextEditingController(text: student.parentEmail);
     final phoneController = TextEditingController(text: student.phone);
@@ -577,14 +557,6 @@ class _StudentsScreenState extends ConsumerState<StudentsScreen> {
                     controller: nameController,
                     labelText: 'Full Name',
                     prefixIcon: const Icon(Icons.person_outline, size: 18),
-                  ),
-                  const SizedBox(height: 16),
-                  AnimatedFocusField(
-                    controller: aadhaarController,
-                    labelText: 'Aadhaar Number',
-                    maxLength: 12,
-                    keyboardType: TextInputType.number,
-                    prefixIcon: const Icon(Icons.credit_card_outlined, size: 18),
                   ),
                   const SizedBox(height: 16),
                   AnimatedFocusField(
@@ -633,7 +605,6 @@ class _StudentsScreenState extends ConsumerState<StudentsScreen> {
                 try {
                   final updatedStudent = student.copyWith(
                     name: nameController.text.trim(),
-                    aadhaarNumber: aadhaarController.text.trim(),
                     parent: parentController.text.trim(),
                     parentEmail: parentEmailController.text.trim(),
                     phone: phoneController.text.trim(),

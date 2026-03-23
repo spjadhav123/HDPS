@@ -194,7 +194,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
       if (e.toString().contains('user-not-found')) {
         errorMessage = 'No account found with this email. Please contact the admin.';
       } else if (e.toString().contains('wrong-password')) {
-        errorMessage = 'Incorrect password. Please use the Aadhaar number provided by the admin.';
+        errorMessage = 'Incorrect password. Please use the Mobile Number registered with the school.';
       } else if (e.toString().contains('invalid-email')) {
         errorMessage = 'Invalid email address.';
       } else if (e.toString().contains('too-many-requests')) {

@@ -45,13 +45,13 @@ class _BulkAddStudentsScreenState extends ConsumerState<BulkAddStudentsScreen> {
   
   void _downloadTemplate() {
     // Create CSV template with sample data
-    final headers = ['Student Name', 'Aadhaar Number', 'Parent Name', 'Parent Email', 'Phone Number', 'Class'];
+    final headers = ['Student Name', 'Parent Name', 'Parent Email', 'Phone Number', 'Class'];
     
     // Sample data rows
     final sampleData = [
-      ['John Doe', '123456789012', 'Jane Doe', 'jane.doe@example.com', '9876543210', 'Nursery'],
-      ['Alice Smith', '234567890123', 'Bob Smith', 'bob.smith@example.com', '8765432109', 'Jr KG'],
-      ['Charlie Brown', '345678901234', 'Lucy Brown', 'lucy.brown@example.com', '7654321098', 'Sr KG'],
+      ['John Doe', 'Jane Doe', 'jane.doe@example.com', '9876543210', 'Nursery'],
+      ['Alice Smith', 'Bob Smith', 'bob.smith@example.com', '8765432109', 'Jr KG'],
+      ['Charlie Brown', 'Lucy Brown', 'lucy.brown@example.com', '7654321098', 'Sr KG'],
     ];
     
     // Combine headers and sample data
@@ -115,11 +115,10 @@ class _BulkAddStudentsScreenState extends ConsumerState<BulkAddStudentsScreen> {
             if (row.length < 5) continue;
 
             final name = row[0]?.value?.toString().trim() ?? '';
-            final aadhaar = row[1]?.value?.toString().trim() ?? '';
-            final parent = row[2]?.value?.toString().trim() ?? '';
-            final email = row[3]?.value?.toString().trim() ?? '';
-            final phone = row[4]?.value?.toString().trim() ?? '';
-            final className = row.length > 5 ? row[5]?.value?.toString().trim() ?? 'Playgroup' : 'Playgroup';
+            final parent = row[1]?.value?.toString().trim() ?? '';
+            final email = row[2]?.value?.toString().trim() ?? '';
+            final phone = row[3]?.value?.toString().trim() ?? '';
+            final className = row.length > 4 ? row[4]?.value?.toString().trim() ?? 'Playgroup' : 'Playgroup';
 
             if (isHeader) {
                if (name.toLowerCase().contains('name') || name.toLowerCase().contains('full')) {
@@ -129,9 +128,9 @@ class _BulkAddStudentsScreenState extends ConsumerState<BulkAddStudentsScreen> {
                isHeader = false;
             }
 
-            if (name.isEmpty && aadhaar.isEmpty) continue;
+            if (name.isEmpty && phone.isEmpty) continue;
 
-            await _addPreviewRow(name, aadhaar, parent, email, phone, className, rows);
+            await _addPreviewRow(name, parent, email, phone, className, rows);
           }
         }
       }
@@ -166,27 +165,23 @@ class _BulkAddStudentsScreenState extends ConsumerState<BulkAddStudentsScreen> {
       if (parts.length < 5) continue;
 
       final name = parts[0].trim();
-      final aadhaar = parts[1].trim();
-      final parent = parts[2].trim();
-      final email = parts[3].trim();
-      final phone = parts[4].trim();
-      final className = parts.length > 5 ? parts[5].trim() : 'Playgroup';
+      final parent = parts[1].trim();
+      final email = parts[2].trim();
+      final phone = parts[3].trim();
+      final className = parts.length > 4 ? parts[4].trim() : 'Playgroup';
 
-      if (name.isEmpty && aadhaar.isEmpty) continue;
+      if (name.isEmpty && phone.isEmpty) continue;
 
-      await _addPreviewRow(name, aadhaar, parent, email, phone, className, rows);
+      await _addPreviewRow(name, parent, email, phone, className, rows);
     }
   }
   
-  Future<void> _addPreviewRow(String name, String aadhaar, String parent, String email, String phone, String className, List<_PreviewRow> rows) async {
-    final studentCode = await ref.read(studentRepositoryProvider).generateStudentCode(className, name, aadhaar);
+  Future<void> _addPreviewRow(String name, String parent, String email, String phone, String className, List<_PreviewRow> rows) async {
+    final studentCode = await ref.read(studentRepositoryProvider).generateStudentCode(className, name, phone);
     
     // Validate
     List<String> errors = [];
     if (name.isEmpty) errors.add("Name required");
-    if (aadhaar.isEmpty) {
-      errors.add("Aadhaar required");
-    } else if (aadhaar.length != 12 || int.tryParse(aadhaar) == null) errors.add("Aadhaar must be 12 digits");
     if (phone.isEmpty) {
       errors.add("Phone required");
     } else if (phone.length < 10) errors.add("Invalid phone");
@@ -196,7 +191,6 @@ class _BulkAddStudentsScreenState extends ConsumerState<BulkAddStudentsScreen> {
       studentCode: studentCode,
       name: name,
       className: className.isEmpty ? 'Playgroup' : className,
-      aadhaarNumber: aadhaar,
       parent: parent,
       parentEmail: email,
       phone: phone,
@@ -227,19 +221,19 @@ class _BulkAddStudentsScreenState extends ConsumerState<BulkAddStudentsScreen> {
     
     try {
       final existingStudents = await ref.read(studentRepositoryProvider).getAllStudentsFuture();
-      final existingAadhaars = existingStudents.map((e) => e.aadhaarNumber).toSet();
+      final existingPhones = existingStudents.map((e) => e.phone).toSet();
       
       final List<ParentCredentials> allCreds = [];
       for (int i = 0; i < validRows.length; i++) {
         final row = validRows[i];
         try {
-          if (existingAadhaars.contains(row.student.aadhaarNumber)) {
+          if (existingPhones.contains(row.student.phone)) {
             failCount++;
             continue;
           }
           final creds = await ref.read(studentRepositoryProvider).addStudent(row.student);
           allCreds.add(creds);
-          existingAadhaars.add(row.student.aadhaarNumber); // Prevent duplicates within batch
+          existingPhones.add(row.student.phone); // Prevent duplicates within batch
           successCount++;
         } catch (e) {
           failCount++;
@@ -331,7 +325,6 @@ class _BulkAddStudentsScreenState extends ConsumerState<BulkAddStudentsScreen> {
   void _editRow(int index) {
     final row = _parsedRows[index];
     final ctrlName = TextEditingController(text: row.student.name);
-    final ctrlAadhaar = TextEditingController(text: row.student.aadhaarNumber);
     final ctrlPhone = TextEditingController(text: row.student.phone);
     final ctrlEmail = TextEditingController(text: row.student.parentEmail);
     final ctrlClass = TextEditingController(text: row.student.className);
@@ -345,7 +338,6 @@ class _BulkAddStudentsScreenState extends ConsumerState<BulkAddStudentsScreen> {
             mainAxisSize: MainAxisSize.min,
             children: [
               TextField(controller: ctrlName, decoration: const InputDecoration(labelText: 'Name')),
-              TextField(controller: ctrlAadhaar, decoration: const InputDecoration(labelText: 'Aadhaar')),
               TextField(controller: ctrlPhone, decoration: const InputDecoration(labelText: 'Phone')),
               TextField(controller: ctrlEmail, decoration: const InputDecoration(labelText: 'Email')),
               TextField(controller: ctrlClass, decoration: const InputDecoration(labelText: 'Class')),
@@ -359,12 +351,10 @@ class _BulkAddStudentsScreenState extends ConsumerState<BulkAddStudentsScreen> {
               int errors = 0;
               List<String> errText = [];
               if (ctrlName.text.isEmpty) { errors++; errText.add("Name required"); }
-              if (ctrlAadhaar.text.isEmpty || ctrlAadhaar.text.length != 12 || int.tryParse(ctrlAadhaar.text) == null) { errors++; errText.add("Aadhaar must be 12 digits"); }
               if (ctrlPhone.text.isEmpty || ctrlPhone.text.length < 10) { errors++; errText.add("Invalid phone"); }
               
               row.student = row.student.copyWith(
                 name: ctrlName.text,
-                aadhaarNumber: ctrlAadhaar.text,
                 phone: ctrlPhone.text,
                 parentEmail: ctrlEmail.text,
                 className: ctrlClass.text,
@@ -518,10 +508,9 @@ class _BulkAddStudentsScreenState extends ConsumerState<BulkAddStudentsScreen> {
             ),
             child: const Row(
               children: [
-                Expanded(flex: 3, child: Text('Student Name', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 13, color: AppTheme.textSecondary))),
-                Expanded(flex: 2, child: Text('Aadhaar', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 13, color: AppTheme.textSecondary))),
-                Expanded(flex: 2, child: Text('Class', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 13, color: AppTheme.textSecondary))),
-                Expanded(flex: 2, child: Text('Phone', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 13, color: AppTheme.textSecondary))),
+                Expanded(flex: 4, child: Text('Student Name', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 13, color: AppTheme.textSecondary))),
+                Expanded(flex: 3, child: Text('Class', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 13, color: AppTheme.textSecondary))),
+                Expanded(flex: 4, child: Text('Phone', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 13, color: AppTheme.textSecondary))),
                 Expanded(flex: 3, child: Text('Status/Error', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 13, color: AppTheme.textSecondary))),
                 SizedBox(width: 80, child: Text('Actions', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 13, color: AppTheme.textSecondary), textAlign: TextAlign.center)),
               ],
@@ -540,10 +529,9 @@ class _BulkAddStudentsScreenState extends ConsumerState<BulkAddStudentsScreen> {
                   padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                   child: Row(
                     children: [
-                      Expanded(flex: 3, child: Text(row.student.name, style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14))),
-                      Expanded(flex: 2, child: Text(row.student.aadhaarNumber, style: const TextStyle(fontSize: 13))),
-                      Expanded(flex: 2, child: Text(row.student.className, style: const TextStyle(fontSize: 13))),
-                      Expanded(flex: 2, child: Text(row.student.phone, style: const TextStyle(fontSize: 13))),
+                      Expanded(flex: 4, child: Text(row.student.name, style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14))),
+                      Expanded(flex: 3, child: Text(row.student.className, style: const TextStyle(fontSize: 13))),
+                      Expanded(flex: 4, child: Text(row.student.phone, style: const TextStyle(fontSize: 13))),
                       Expanded(
                         flex: 3,
                         child: row.isValid 

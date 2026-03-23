@@ -18,14 +18,14 @@ class LoginScreen extends ConsumerStatefulWidget {
 class _LoginScreenState extends ConsumerState<LoginScreen> {
   final _formKey = GlobalKey<FormState>();
   final _emailController = TextEditingController();
-  final _aadhaarController = TextEditingController();
+  final _mobileController = TextEditingController();
   bool _obscurePassword = true;
   String? _selectedDemo;
 
   @override
   void dispose() {
     _emailController.dispose();
-    _aadhaarController.dispose();
+    _mobileController.dispose();
     super.dispose();
   }
 
@@ -50,7 +50,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     if (!_formKey.currentState!.validate()) return;
     
     final credential = _emailController.text.trim();
-    final password = _aadhaarController.text.trim();
+    final password = _mobileController.text.trim();
 
     // 1. Check if it's a demo user (staff/admin)
     if (AppConstants.demoUsers.containsKey(credential.toLowerCase())) {
@@ -291,7 +291,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
           const SizedBox(height: 16),
 
           AnimatedFocusField(
-            controller: _aadhaarController,
+            controller: _mobileController,
             obscureText: _obscurePassword,
             labelText: 'Mobile Number (Password)',
             prefixIcon: const Icon(Icons.lock_outline, size: 20),

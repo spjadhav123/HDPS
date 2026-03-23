@@ -3,10 +3,9 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 
 class Student {
   final String id;
-  final String studentCode; // Human-friendly ID including class, name, and Aadhaar
+  final String studentCode; // Human-friendly ID including class, name, and phone
   final String name;
   final String className;
-  final String aadhaarNumber;
   final String parent;
   final String parentEmail;
   final String parentUsername; // Auto-generated: first name lowercase, deduplicated
@@ -21,7 +20,6 @@ class Student {
     required this.studentCode,
     required this.name,
     required this.className,
-    required this.aadhaarNumber,
     required this.parent,
     required this.parentEmail,
     this.parentUsername = '',
@@ -39,7 +37,6 @@ class Student {
       studentCode: (data['studentCode'] ?? '') as String,
       name: data['name'] ?? '',
       className: data['className'] ?? '',
-      aadhaarNumber: data['aadhaarNumber'] ?? '',
       parent: data['parent'] ?? '',
       parentEmail: data['parentEmail'] ?? '',
       parentUsername: data['parentUsername'] ?? '',
@@ -56,7 +53,6 @@ class Student {
       'studentCode': studentCode,
       'name': name,
       'className': className,
-      'aadhaarNumber': aadhaarNumber,
       'parent': parent,
       'parentEmail': parentEmail,
       'parentUsername': parentUsername,
@@ -72,7 +68,6 @@ class Student {
     String? studentCode,
     String? name,
     String? className,
-    String? aadhaarNumber,
     String? parent,
     String? parentEmail,
     String? parentUsername,
@@ -86,7 +81,6 @@ class Student {
       studentCode: studentCode ?? this.studentCode,
       name: name ?? this.name,
       className: className ?? this.className,
-      aadhaarNumber: aadhaarNumber ?? this.aadhaarNumber,
       parent: parent ?? this.parent,
       parentEmail: parentEmail ?? this.parentEmail,
       parentUsername: parentUsername ?? this.parentUsername,

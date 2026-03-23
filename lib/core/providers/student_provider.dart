@@ -216,15 +216,15 @@ class StudentRepository {
   // Student Code Generation
   // ---------------------------------------------------------------------------
 
-  /// Generate a human-friendly student code that includes class, student name, and Aadhaar.
-  /// Format: {CLASS}-{NAME_INITIALS}-{AADHAAR_LAST_4}
+  /// Generate a human-friendly student code that includes class, student name, and Phone.
+  /// Format: {CLASS}-{NAME_INITIALS}-{PHONE_LAST_4}
   /// Example: "NUR-RAJ-1234", "LKG-PRI-5678".
   Future<String> generateStudentCode(
-      String className, String studentName, String aadhaarNumber) async {
+      String className, String studentName, String phoneNumber) async {
     final classPrefix = _buildClassPrefix(className);
     final nameInitials = _buildNameInitials(studentName);
-    final aadhaarLast4 = _getAadhaarLast4(aadhaarNumber);
-    return '$classPrefix-$nameInitials-$aadhaarLast4';
+    final phoneLast4 = _getPhoneLast4(phoneNumber);
+    return '$classPrefix-$nameInitials-$phoneLast4';
   }
 
   String _buildClassPrefix(String className) {
@@ -246,8 +246,8 @@ class StudentRepository {
     return firstWord.padRight(3, 'X');
   }
 
-  String _getAadhaarLast4(String aadhaarNumber) {
-    final cleaned = aadhaarNumber.replaceAll(RegExp(r'[\s-]'), '');
+  String _getPhoneLast4(String phoneNumber) {
+    final cleaned = phoneNumber.replaceAll(RegExp(r'[\s-]'), '');
     if (cleaned.length < 4) return cleaned.padLeft(4, '0');
     return cleaned.substring(cleaned.length - 4);
   }

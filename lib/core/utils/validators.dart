@@ -15,14 +15,6 @@ class Validators {
     return null;
   }
 
-  static String? aadhaar(String? value) {
-    if (value == null || value.trim().isEmpty) return 'Aadhaar number is required';
-    final cleaned = value.replaceAll(RegExp(r'\s'), '');
-    if (cleaned.length != 12) return 'Aadhaar must be 12 digits';
-    if (!RegExp(r'^\d+$').hasMatch(cleaned)) return 'Aadhaar must contain only digits';
-    return null;
-  }
-
   static String? phone(String? value) {
     if (value == null || value.trim().isEmpty) return null; // optional
     final cleaned = value.replaceAll(RegExp(r'[\s\-\+]'), '');
