@@ -58,6 +58,19 @@ class _StudentsScreenState extends ConsumerState<StudentsScreen> {
                   ),
                   const SizedBox(width: 8),
                   ElevatedButton.icon(
+                    onPressed: () async {
+                      AppToast.show(context, message: 'Rebuilding missing credentials...', type: ToastType.info);
+                      await ref.read(studentRepositoryProvider).repairAllCredentials();
+                      if (context.mounted) {
+                        AppToast.show(context, message: 'All missing credentials regenerated!', type: ToastType.success);
+                      }
+                    },
+                    icon: const Icon(Icons.build_circle_outlined, size: 18, color: Colors.white),
+                    label: const Text('Repair Logins'),
+                    style: ElevatedButton.styleFrom(backgroundColor: Colors.orange.shade600),
+                  ),
+                  const SizedBox(width: 8),
+                  ElevatedButton.icon(
                     onPressed: () => _showAddStudentDialog(context),
                     icon: const Icon(Icons.add, size: 18),
                     label: const Text('Add Student'),

@@ -259,6 +259,38 @@ class StudentRepository {
   }
 
   // ---------------------------------------------------------------------------
+  // Repair Tools
+  // ---------------------------------------------------------------------------
+
+  /// Identifies and recreates any missing Firebase Auth credentials for all students
+  Future<void> repairAllCredentials() async {
+    final studentsSnapshot = await _firestore.collection('students').get();
+    final students = studentsSnapshot.docs.map((d) => Student.fromFirestore(d)).toList();
+
+    for (final student in students) {
+      if (student.name.isEmpty || student.phone.isEmpty) continue;
+      
+      final username = student.name.trim().split(RegExp(r'\s+')).first;
+      final digits = student.phone.replaceAll(RegExp(r'[^0-9]'), '');
+      final pass = digits.length > 10 ? digits.substring(digits.length - 10) : digits;
+      
+      try {
+        await _saveParentCredentials(
+          username: username,
+          password: pass,
+          parentName: student.parent,
+          parentEmail: student.parentEmail,
+          parentMobile: student.phone.trim(),
+          studentId: student.id,
+          studentName: student.name,
+        );
+      } catch (e) {
+        print('DEBUG: Repair error for ${student.name}: $e');
+      }
+    }
+  }
+
+  // ---------------------------------------------------------------------------
   // CRUD
   // ---------------------------------------------------------------------------
 
