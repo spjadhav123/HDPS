@@ -1,12 +1,12 @@
 # Ignore all Flutter source and native platform files
-android/
-ios/
-macos/
-linux/
-windows/
-test/
-lib/
-assets/
+/android/
+/ios/
+/macos/
+/linux/
+/windows/
+/test/
+/lib/
+/assets/
 .dart_tool/
 .idea/
 .vscode/
