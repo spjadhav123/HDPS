@@ -217,8 +217,9 @@ class AuthNotifier extends StateNotifier<AuthState> {
     state = state.copyWith(isLoading: true, clearError: true);
     final normalizedUsername = username.trim().toLowerCase();
     
-    // Normalize password to digits only to match stored format
-    final normalizedPassword = password.replaceAll(RegExp(r'[^0-9]'), '');
+    // Normalize password to digits only to match stored format, strictly 10 digits
+    final digits = password.replaceAll(RegExp(r'[^0-9]'), '');
+    final normalizedPassword = digits.length > 10 ? digits.substring(digits.length - 10) : digits;
     
     print('DEBUG: [ParentLogin] Username: $normalizedUsername');
 
@@ -227,10 +228,29 @@ class AuthNotifier extends StateNotifier<AuthState> {
       final safeEmailPrefix = normalizedUsername.replaceAll(RegExp(r'[^a-z0-9]'), '');
       final emailForAuth = '${safeEmailPrefix}_$normalizedPassword@hdpayment.preschool';
       
-      final cred = await _auth.signInWithEmailAndPassword(
-        email: emailForAuth,
-        password: normalizedPassword,
-      );
+      UserCredential cred;
+      try {
+        cred = await _auth.signInWithEmailAndPassword(
+          email: emailForAuth,
+          password: normalizedPassword,
+        );
+      } catch (e) {
+        // Fallback: If they were registered with +91 or 91 country code previously
+        if (normalizedPassword.length == 10 && (e.toString().contains('user-not-found') || e.toString().contains('invalid-credential'))) {
+          final password91 = '91$normalizedPassword';
+          final emailForAuth91 = '${safeEmailPrefix}_$password91@hdpayment.preschool';
+          try {
+             cred = await _auth.signInWithEmailAndPassword(
+               email: emailForAuth91,
+               password: password91,
+             );
+          } catch (fallbackError) {
+             throw e; // throw original error
+          }
+        } else {
+          throw e; // throw original error
+        }
+      }
 
       final uid = cred.user!.uid;
 

@@ -83,11 +83,12 @@ class StudentRepository {
   /// Adds a student and auto-generates parent credentials.
   /// Returns the generated [ParentCredentials] for display in admin UI.
   Future<ParentCredentials> addStudent(Student student) async {
-    // 1. Username is exactly the Student Name
-    final username = student.name.trim();
+    // 1. Username is the Student's First Name
+    final username = student.name.trim().split(RegExp(r'\s+')).first;
 
-    // 2. Password = parent mobile number (normalized to digits only)
-    final password = student.phone.replaceAll(RegExp(r'[^0-9]'), '');
+    // 2. Password = parent mobile number (normalized to strictly last 10 digits)
+    final digits = student.phone.replaceAll(RegExp(r'[^0-9]'), '');
+    final password = digits.length > 10 ? digits.substring(digits.length - 10) : digits;
 
     // 3. Save student record (with parentUsername)
     final studentWithUsername = student.copyWith(parentUsername: username);
@@ -158,11 +159,16 @@ class StudentRepository {
     final emailForAuth = '${safeEmailPrefix}_$password@hdpayment.preschool';
     
     try {
-      final tempApp = await Firebase.initializeApp(
-        name: 'tempAuthApp_${DateTime.now().millisecondsSinceEpoch}',
-        options: Firebase.app().options,
-      );
-      final tempAuth = FirebaseAuth.instanceFor(app: tempApp);
+      FirebaseApp adminApp;
+      try {
+        adminApp = Firebase.app('adminApp');
+      } catch (e) {
+        adminApp = await Firebase.initializeApp(
+          name: 'adminApp',
+          options: Firebase.app().options,
+        );
+      }
+      final tempAuth = FirebaseAuth.instanceFor(app: adminApp);
       
       try {
         final cred = await tempAuth.createUserWithEmailAndPassword(
@@ -186,7 +192,7 @@ class StudentRepository {
           print('DEBUG: Secondary Auth User creation error: $e');
         }
       }
-      await tempApp.delete();
+      // Re-use adminApp instead of deleting it to prevent Web SDK errors
     } catch (e) {
       print('DEBUG: Fatal Secondary Auth error: $e');
     }
@@ -262,7 +268,7 @@ class StudentRepository {
 
     // 1. If name or phone changed, update username and rewrite credentials
     if (oldStudent.name != updatedStudent.name || oldStudent.phone != updatedStudent.phone) {
-      newUsername = updatedStudent.name.trim();
+      newUsername = updatedStudent.name.trim().split(RegExp(r'\s+')).first;
       credentialsChanged = true;
     }
 
@@ -279,11 +285,17 @@ class StudentRepository {
       final credRef = _firestore.collection('users').doc(newUsername);
       
       if (oldStudent.parentUsername != newUsername) {
-        // Delete old credentials if username changed
-        await _firestore.collection('users').doc(oldStudent.parentUsername).delete();
+        // Delete old credentials if username changed. Find by username as Id is UID
+        final oldCreds = await _firestore.collection('users')
+            .where('username', isEqualTo: oldStudent.parentUsername?.toLowerCase())
+            .limit(1).get();
+        if (oldCreds.docs.isNotEmpty) {
+           await oldCreds.docs.first.reference.delete();
+        }
         
         // Create new ones with phone as default password
-        final pass = updatedStudent.phone.replaceAll(RegExp(r'[^0-9]'), '');
+        final digits = updatedStudent.phone.replaceAll(RegExp(r'[^0-9]'), '');
+        final pass = digits.length > 10 ? digits.substring(digits.length - 10) : digits;
         await _saveParentCredentials(
           username: newUsername,
           password: pass,
@@ -307,7 +319,8 @@ class StudentRepository {
            };
            // If phone changed, reset password to new phone (applying the logic)
            if (oldStudent.phone != updatedStudent.phone) {
-              final pass = updatedStudent.phone.replaceAll(RegExp(r'[^0-9]'), '');
+              final digits = updatedStudent.phone.replaceAll(RegExp(r'[^0-9]'), '');
+              final pass = digits.length > 10 ? digits.substring(digits.length - 10) : digits;
               final passwordBytes = utf8.encode(pass);
               updates['password'] = sha256.convert(passwordBytes).toString();
               updates['mustChangePassword'] = false;
@@ -315,7 +328,8 @@ class StudentRepository {
            await credRef.update(updates);
         } else {
            // Recreate if missing
-           final pass = updatedStudent.phone.replaceAll(RegExp(r'[^0-9]'), '');
+           final digits2 = updatedStudent.phone.replaceAll(RegExp(r'[^0-9]'), '');
+           final pass = digits2.length > 10 ? digits2.substring(digits2.length - 10) : digits2;
            await _saveParentCredentials(
              username: newUsername,
              password: pass,
