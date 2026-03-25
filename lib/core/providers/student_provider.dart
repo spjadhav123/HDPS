@@ -56,9 +56,9 @@ class StudentRepository {
   /// If duplicate exists, appends last 3 digits of parent phone.
   /// Example: "aarav", "aarav210"
   Future<String> generateParentUsername(String studentName, String phone) async {
-    final firstName = studentName.trim().split(RegExp(r'\s+')).first.toLowerCase();
+    final baseName = studentName.trim().toLowerCase();
     // Remove non-alphanumeric chars
-    final base = firstName.replaceAll(RegExp(r'[^a-z0-9]'), '');
+    final base = baseName.replaceAll(RegExp(r'[^a-z0-9]'), '');
     if (base.isEmpty) return 'parent${DateTime.now().millisecondsSinceEpoch}';
 
     final phoneClean = phone.replaceAll(RegExp(r'[^0-9]'), '');
@@ -83,8 +83,8 @@ class StudentRepository {
   /// Adds a student and auto-generates parent credentials.
   /// Returns the generated [ParentCredentials] for display in admin UI.
   Future<ParentCredentials> addStudent(Student student) async {
-    // 1. Username is the Student's First Name
-    final username = student.name.trim().split(RegExp(r'\s+')).first;
+    // 1. Username is the Student's Full Name (as mentioned during student add)
+    final username = student.name.trim();
 
     // 2. Password = parent mobile number (normalized to strictly last 10 digits)
     final digits = student.phone.replaceAll(RegExp(r'[^0-9]'), '');
@@ -270,7 +270,7 @@ class StudentRepository {
     for (final student in students) {
       if (student.name.isEmpty || student.phone.isEmpty) continue;
       
-      final username = student.name.trim().split(RegExp(r'\s+')).first;
+      final username = student.name.trim();
       final digits = student.phone.replaceAll(RegExp(r'[^0-9]'), '');
       final pass = digits.length > 10 ? digits.substring(digits.length - 10) : digits;
       
@@ -300,7 +300,7 @@ class StudentRepository {
 
     // 1. If name or phone changed, update username and rewrite credentials
     if (oldStudent.name != updatedStudent.name || oldStudent.phone != updatedStudent.phone) {
-      newUsername = updatedStudent.name.trim().split(RegExp(r'\s+')).first;
+      newUsername = updatedStudent.name.trim();
       credentialsChanged = true;
     }
 
