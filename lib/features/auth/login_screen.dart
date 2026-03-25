@@ -269,7 +269,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
           const SizedBox(height: 32),
           
           const Text(
-            'Secure Login',
+            'Parent & Staff Login',
             style: TextStyle(
               fontSize: 18,
               fontWeight: FontWeight.w700,
@@ -280,9 +280,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
           AnimatedFocusField(
             controller: _emailController,
-            labelText: 'Student Name (Username)',
+            labelText: 'Username (Student or Staff Name)',
             prefixIcon: const Icon(Icons.person_outlined, size: 20),
-            hintText: 'Enter the exact student name',
+            hintText: 'Enter your exact full name',
             validator: (v) {
               if (v == null || v.trim().isEmpty) return 'Enter the student name';
               return null;

@@ -270,7 +270,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
 
       final userData = userDoc.data()!;
       final role = userData['role'] as String? ?? '';
-      if (role.toLowerCase() != 'parent') {
+      if (role.toLowerCase() != 'parent' && role.toLowerCase() != 'teacher' && role.toLowerCase() != 'staff') {
         state = state.copyWith(isLoading: false, error: 'Unauthorized access.');
         await _auth.signOut();
         return false;
@@ -278,13 +278,13 @@ class AuthNotifier extends StateNotifier<AuthState> {
 
       final status = userData['status'] as String? ?? '';
       if (status.toLowerCase() != 'active') {
-        state = state.copyWith(isLoading: false, error: 'Parent account not active. Please contact administrator.');
+        state = state.copyWith(isLoading: false, error: 'Account not active. Please contact administrator.');
         await _auth.signOut();
         return false;
       }
 
-      final parentEmail = userData['parentEmail'] as String? ?? '';
-      final parentName = userData['parentName'] as String? ?? 'Parent';
+      final parentEmail = userData['parentEmail'] as String? ?? userData['teacherEmail'] as String? ?? userData['email'] as String? ?? '';
+      final parentName = userData['parentName'] as String? ?? userData['teacherName'] as String? ?? userData['name'] as String? ?? 'User';
       final studentId = userData['studentId'] as String? ?? '';
       final mustChangePassword = userData['mustChangePassword'] as bool? ?? false;
 
@@ -295,7 +295,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
           uid: uid,
           email: parentEmail,
           name: parentName,
-          role: 'parent',
+          role: role.toLowerCase(),
           username: normalizedUsername,
           mustChangePassword: mustChangePassword,
           studentId: studentId,
