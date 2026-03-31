@@ -262,6 +262,7 @@ class AdminDashboard extends ConsumerWidget {
                 _QuickAction(icon: Icons.receipt_long_rounded, label: 'Fee Receipt', color: Colors.green, animDelay: 360, onTap: () => context.push('/admin/fees')),
                 _QuickAction(icon: Icons.calendar_month_rounded, label: 'Academic Calendar', color: Colors.purple, animDelay: 430, onTap: () => context.push('/events')),
                 _QuickAction(icon: Icons.verified_user_rounded, label: 'Bonafide', color: Colors.teal, animDelay: 500, onTap: () => context.push('/admin/bonafide')),
+                _QuickAction(icon: Icons.workspace_premium_rounded, label: 'Experience', color: Colors.blueGrey, animDelay: 540, onTap: () => context.push('/admin/experience-letter')),
                 _QuickAction(icon: Icons.output_rounded, label: 'Leaving Cert', color: Colors.indigo, animDelay: 570, onTap: () => context.push('/admin/leaving-certificate')),
               ],
             ),

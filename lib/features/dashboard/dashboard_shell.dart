@@ -422,6 +422,7 @@ class _DashboardShellState extends ConsumerState<DashboardShell>
           const NavItem('Students', '/admin/students', Icons.group_rounded),
           const NavItem('Bonafide', '/admin/bonafide', Icons.verified_user_rounded),
           const NavItem('Teachers', '/admin/teachers', Icons.badge_rounded),
+          const NavItem('Experience', '/admin/experience-letter', Icons.workspace_premium_rounded),
           const NavItem('Fees', '/admin/fees', Icons.payments_rounded),
           const NavItem('Gallery', '/gallery', Icons.photo_library_rounded),
           const NavItem('Events', '/events', Icons.event_rounded),
