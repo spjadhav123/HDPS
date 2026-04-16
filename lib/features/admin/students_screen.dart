@@ -4,6 +4,11 @@ import 'package:go_router/go_router.dart';
 import '../../core/theme/app_theme.dart';
 import '../../shared/widgets/page_header.dart';
 import '../../shared/widgets/app_animations.dart';
+import 'package:excel/excel.dart' as excel_pkg;
+import 'package:share_plus/share_plus.dart';
+import 'dart:typed_data';
+import 'package:intl/intl.dart';
+
 import '../../core/models/student_model.dart';
 import '../../core/providers/student_provider.dart';
 
@@ -315,10 +320,66 @@ class _StudentsScreenState extends ConsumerState<StudentsScreen> {
       return;
     }
 
-    // Export functionality removed for cross-platform compatibility
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Export functionality is not available in this version')),
-    );
+    try {
+      if (mounted) {
+        AppToast.show(context, message: 'Generating Excel file...', type: ToastType.info);
+      }
+      
+      final excel = excel_pkg.Excel.createExcel();
+      final sheet = excel['Students List'];
+      excel.setDefaultSheet('Students List');
+      
+      if (excel['Sheet1'] != null && excel.tables.keys.length > 1) {
+        excel.delete('Sheet1');
+      }
+
+      sheet.appendRow([
+        excel_pkg.TextCellValue('ID'),
+        excel_pkg.TextCellValue('Registration Number'),
+        excel_pkg.TextCellValue('Name'),
+        excel_pkg.TextCellValue('Class'),
+        excel_pkg.TextCellValue('Parent Name'),
+        excel_pkg.TextCellValue('Parent Email'),
+        excel_pkg.TextCellValue('Phone'),
+        excel_pkg.TextCellValue('Fees Paid'),
+        excel_pkg.TextCellValue('Fees Total'),
+        excel_pkg.TextCellValue('Status'),
+        excel_pkg.TextCellValue('Registration Date'),
+      ]);
+
+      for (var s in studentsList) {
+        sheet.appendRow([
+          excel_pkg.TextCellValue(s.id),
+          excel_pkg.TextCellValue(s.studentCode),
+          excel_pkg.TextCellValue(s.name),
+          excel_pkg.TextCellValue(s.className),
+          excel_pkg.TextCellValue(s.parent),
+          excel_pkg.TextCellValue(s.parentEmail),
+          excel_pkg.TextCellValue(s.phone),
+          excel_pkg.DoubleCellValue(s.feesPaid),
+          excel_pkg.DoubleCellValue(s.feesTotal),
+          excel_pkg.TextCellValue(s.status),
+          excel_pkg.TextCellValue(DateFormat('yyyy-MM-dd').format(s.createdAt)),
+        ]);
+      }
+
+      final fileBytes = excel.encode();
+      if (fileBytes != null) {
+        final dateStr = DateFormat('yyyyMMdd').format(DateTime.now());
+        await Share.shareXFiles(
+          [XFile.fromData(
+            Uint8List.fromList(fileBytes),
+            mimeType: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+            name: 'Students_List_$dateStr.xlsx'
+          )],
+          text: 'Preschool Students Export',
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        AppToast.show(context, message: 'Export failed: $e', type: ToastType.error);
+      }
+    }
   }
 
   void _showAddStudentDialog(BuildContext context) {

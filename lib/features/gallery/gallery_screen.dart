@@ -9,6 +9,7 @@ import '../../shared/widgets/page_header.dart';
 import '../../shared/widgets/empty_state.dart';
 import '../../shared/widgets/app_card.dart';
 import 'dart:io';
+import 'dart:convert';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/foundation.dart';
 import '../../shared/widgets/app_animations.dart';
@@ -161,11 +162,13 @@ class _AlbumCard extends ConsumerWidget {
                           color: AppTheme.primary.withOpacity(0.1),
                           child: const Icon(Icons.image_rounded, color: AppTheme.primary, size: 40),
                         )
-                      : Image.network(
-                          album.coverUrl,
-                          fit: BoxFit.cover,
-                          errorBuilder: (context, error, stackTrace) => const Icon(Icons.error),
-                        ),
+                      : album.coverUrl.startsWith('data:') 
+                          ? Image.memory(base64Decode(album.coverUrl.split(',').last), fit: BoxFit.cover)
+                          : Image.network(
+                              album.coverUrl,
+                              fit: BoxFit.cover,
+                              errorBuilder: (context, error, stackTrace) => const Icon(Icons.error),
+                            ),
                 ),
               ),
               Padding(
@@ -303,7 +306,7 @@ class AlbumDetailsScreen extends ConsumerWidget {
           if (kIsWeb && file.bytes == null) continue;
           if (!kIsWeb && file.path == null) continue;
 
-          final url = await repo.uploadPhoto(kIsWeb ? file.bytes : File(file.path!), album.id);
+          final url = await repo.uploadPhoto(kIsWeb ? file.bytes! : File(file.path!), album.id);
           
           final photo = GalleryPhoto(
             id: '',
@@ -349,15 +352,17 @@ class _PhotoTile extends ConsumerWidget {
             aspectRatio: 1,
             child: GestureDetector(
               onTap: () => _showFullScreen(context),
-              child: Image.network(
-                photo.url,
-                fit: BoxFit.cover,
-                loadingBuilder: (context, child, loadingProgress) {
-                  if (loadingProgress == null) return child;
-                  return Container(color: Colors.grey.shade100, child: const Center(child: CircularProgressIndicator(strokeWidth: 2)));
-                },
-                errorBuilder: (context, error, stackTrace) => const Icon(Icons.error),
-              ),
+              child: photo.url.startsWith('data:') 
+                ? Image.memory(base64Decode(photo.url.split(',').last), fit: BoxFit.cover)
+                : Image.network(
+                    photo.url,
+                    fit: BoxFit.cover,
+                    loadingBuilder: (context, child, loadingProgress) {
+                      if (loadingProgress == null) return child;
+                      return Container(color: Colors.grey.shade100, child: const Center(child: CircularProgressIndicator(strokeWidth: 2)));
+                    },
+                    errorBuilder: (context, error, stackTrace) => const Icon(Icons.error),
+                  ),
             ),
           ),
         ),
@@ -411,7 +416,9 @@ class _PhotoTile extends ConsumerWidget {
           children: [
             ClipRRect(
               borderRadius: BorderRadius.circular(16),
-              child: Image.network(photo.url),
+              child: photo.url.startsWith('data:') 
+                  ? Image.memory(base64Decode(photo.url.split(',').last))
+                  : Image.network(photo.url),
             ),
             if (photo.description.isNotEmpty)
               Padding(

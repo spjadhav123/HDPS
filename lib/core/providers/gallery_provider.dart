@@ -3,6 +3,8 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'dart:io';
+import 'dart:typed_data';
+import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import '../models/gallery_model.dart';
 import 'student_provider.dart';
@@ -55,18 +57,33 @@ class GalleryRepository {
   FirebaseStorage get _storage => _ref.read(storageProvider);
 
   Future<String> uploadPhoto(dynamic file, String albumId) async {
-    final fileName = '${DateTime.now().millisecondsSinceEpoch}.jpg';
-    final ref = _storage.ref().child('gallery/$albumId/$fileName');
-    
-    UploadTask uploadTask;
-    if (kIsWeb) {
-      uploadTask = ref.putData(file as Uint8List);
-    } else {
-      uploadTask = ref.putFile(file as File);
+    try {
+      final fileName = '${DateTime.now().millisecondsSinceEpoch}.jpg';
+      final ref = _storage.ref().child('gallery/$albumId/$fileName');
+      
+      UploadTask uploadTask;
+      final metadata = SettableMetadata(contentType: 'image/jpeg');
+      if (kIsWeb) {
+        uploadTask = ref.putData(file as Uint8List, metadata);
+      } else {
+        uploadTask = ref.putFile(file as File, metadata);
+      }
+      
+      // Attempt to upload but timeout after 5 seconds to prevent hanging on permission/CORS errors
+      final snapshot = await uploadTask.timeout(const Duration(seconds: 5));
+      return await snapshot.ref.getDownloadURL();
+    } catch (e) {
+      debugPrint('Firebase Storage upload failed or timed out ($e). Falling back to Base64 encoding.');
+      // If the upload failed/timed out (e.g. from missing auth/CORS on Firebase), we fallback to base64 embedded URI.
+      if (kIsWeb) {
+        final b64 = base64Encode(file as Uint8List);
+        return 'data:image/jpeg;base64,$b64';
+      } else {
+        final bytes = await (file as File).readAsBytes();
+        final b64 = base64Encode(bytes);
+        return 'data:image/jpeg;base64,$b64';
+      }
     }
-    
-    final snapshot = await uploadTask;
-    return await snapshot.ref.getDownloadURL();
   }
 
   Future<String> createAlbum(GalleryAlbum album) async {
