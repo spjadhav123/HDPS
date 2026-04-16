@@ -14,6 +14,7 @@ import '../../features/admin/fee_dashboard.dart';
 import '../../features/admin/fee_structure_setup_screen.dart';
 import '../../features/admin/student_fee_assignment_screen.dart';
 import '../../features/admin/bonafide_certificate_screen.dart';
+import '../../features/admin/leaving_certificate_screen.dart';
 import '../../features/teacher/teacher_dashboard.dart';
 import '../../features/teacher/attendance_screen.dart';
 import '../../features/teacher/gradebook_screen.dart';
@@ -164,6 +165,10 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           GoRoute(
             path: '/admin/bonafide',
             pageBuilder: (context, state) => _buildSubPage(context, state, const BonafideCertificateScreen()),
+          ),
+          GoRoute(
+            path: '/admin/leaving-certificate',
+            pageBuilder: (context, state) => _buildSubPage(context, state, const LeavingCertificateScreen()),
           ),
 
           // ── Teacher ────────────────────────────────────────
