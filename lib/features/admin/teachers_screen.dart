@@ -4,8 +4,12 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import '../../core/theme/app_theme.dart';
 import '../../shared/widgets/page_header.dart';
+import '../../shared/widgets/app_animations.dart';
 import '../../core/models/teacher_model.dart';
 import '../../core/providers/teacher_provider.dart';
+import 'package:excel/excel.dart' as excel_pkg;
+import 'package:share_plus/share_plus.dart';
+import 'dart:typed_data';
 
 class TeachersScreen extends ConsumerStatefulWidget {
   const TeachersScreen({super.key});
@@ -32,10 +36,20 @@ class _TeachersScreenState extends ConsumerState<TeachersScreen> {
                 data: (t) => '${t.length} staff members',
                 orElse: () => 'Staff Management',
               ),
-              action: ElevatedButton.icon(
-                onPressed: () => _showAddStaffDialog(context),
-                icon: const Icon(Icons.add, size: 18),
-                label: const Text('Add Staff'),
+              action: Row(
+                children: [
+                  OutlinedButton.icon(
+                    onPressed: () => _exportTeachers(ref),
+                    icon: const Icon(Icons.download_rounded, size: 18),
+                    label: const Text('Export List'),
+                  ),
+                  const SizedBox(width: 8),
+                  ElevatedButton.icon(
+                    onPressed: () => _showAddStaffDialog(context),
+                    icon: const Icon(Icons.add, size: 18),
+                    label: const Text('Add Staff'),
+                  ),
+                ],
               ),
             ),
             const SizedBox(height: 24),
@@ -223,6 +237,73 @@ class _TeachersScreenState extends ConsumerState<TeachersScreen> {
         ),
       ),
     );
+  }
+
+  void _exportTeachers(WidgetRef ref) async {
+    final teachersList = await ref.read(teacherRepositoryProvider).getAllTeachersFuture();
+    if (teachersList.isEmpty) {
+      if (mounted) {
+        AppToast.show(context, message: 'No staff members to export', type: ToastType.warning);
+      }
+      return;
+    }
+
+    try {
+      if (mounted) {
+        AppToast.show(context, message: 'Generating Excel file...', type: ToastType.info);
+      }
+      
+      final excel = excel_pkg.Excel.createExcel();
+      final sheet = excel['Teachers List'];
+      excel.setDefaultSheet('Teachers List');
+      
+      if (excel['Sheet1'] != null && excel.tables.keys.length > 1) {
+        excel.delete('Sheet1');
+      }
+
+      sheet.appendRow([
+        excel_pkg.TextCellValue('ID'),
+        excel_pkg.TextCellValue('Name'),
+        excel_pkg.TextCellValue('Role/Subject'),
+        excel_pkg.TextCellValue('Class'),
+        excel_pkg.TextCellValue('Email'),
+        excel_pkg.TextCellValue('Phone'),
+        excel_pkg.TextCellValue('Qualification'),
+        excel_pkg.TextCellValue('Experience'),
+        excel_pkg.TextCellValue('Joining Date'),
+      ]);
+
+      for (var t in teachersList) {
+        sheet.appendRow([
+          excel_pkg.TextCellValue(t.id),
+          excel_pkg.TextCellValue(t.name),
+          excel_pkg.TextCellValue(t.subject),
+          excel_pkg.TextCellValue(t.className),
+          excel_pkg.TextCellValue(t.email),
+          excel_pkg.TextCellValue(t.phone),
+          excel_pkg.TextCellValue(t.qualification),
+          excel_pkg.TextCellValue(t.experience),
+          excel_pkg.TextCellValue(DateFormat('yyyy-MM-dd').format(t.joiningDate)),
+        ]);
+      }
+
+      final fileBytes = excel.encode();
+      if (fileBytes != null) {
+        final dateStr = DateFormat('yyyyMMdd').format(DateTime.now());
+        await Share.shareXFiles(
+          [XFile.fromData(
+            Uint8List.fromList(fileBytes),
+            mimeType: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+            name: 'Teachers_List_$dateStr.xlsx'
+          )],
+          text: 'Preschool Teachers Export',
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        AppToast.show(context, message: 'Export failed: $e', type: ToastType.error);
+      }
+    }
   }
 }
 

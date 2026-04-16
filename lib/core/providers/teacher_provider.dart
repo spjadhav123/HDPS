@@ -141,4 +141,9 @@ class TeacherRepository {
       }
     }
   }
+
+  Future<List<Teacher>> getAllTeachersFuture() async {
+    final snapshot = await _firestore.collection('teachers').orderBy('createdAt', descending: true).get();
+    return snapshot.docs.map((doc) => Teacher.fromFirestore(doc)).toList();
+  }
 }
