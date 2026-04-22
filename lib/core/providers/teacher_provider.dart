@@ -20,20 +20,42 @@ final teachersStreamProvider = StreamProvider<List<Teacher>>((ref) {
 });
 
 /// Streams the Teacher document for the currently logged-in teacher user.
-/// Matches by the teacher's name stored in AuthUser against the `name` field
-/// in the Firestore `teachers` collection.
+/// Tries to match the teacher by their exact name first, then falls back
+/// to a case-insensitive search across all teachers.
 final currentTeacherProvider = StreamProvider<Teacher?>((ref) {
   final user = ref.watch(authProvider).user;
   if (user == null || user.role != 'teacher') return Stream.value(null);
 
   final firestore = ref.watch(firestoreProvider);
+  final userName = user.name.trim();
+
   return firestore
       .collection('teachers')
-      .where('name', isEqualTo: user.name)
-      .limit(1)
       .snapshots()
-      .map((snap) =>
-          snap.docs.isEmpty ? null : Teacher.fromFirestore(snap.docs.first));
+      .map((snap) {
+        if (snap.docs.isEmpty) return null;
+
+        // Try exact match first
+        final exactMatch = snap.docs.where((doc) {
+          final name = (doc.data()['name'] as String? ?? '').trim();
+          return name == userName;
+        });
+        if (exactMatch.isNotEmpty) {
+          return Teacher.fromFirestore(exactMatch.first);
+        }
+
+        // Try case-insensitive match (handles Firestore fallback login)
+        final lowerName = userName.toLowerCase();
+        final caseMatch = snap.docs.where((doc) {
+          final name = (doc.data()['name'] as String? ?? '').trim().toLowerCase();
+          return name == lowerName;
+        });
+        if (caseMatch.isNotEmpty) {
+          return Teacher.fromFirestore(caseMatch.first);
+        }
+
+        return null;
+      });
 });
 
 final teacherRepositoryProvider = Provider((ref) => TeacherRepository(ref));
