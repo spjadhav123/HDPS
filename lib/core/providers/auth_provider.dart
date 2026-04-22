@@ -223,8 +223,8 @@ class AuthNotifier extends StateNotifier<AuthState> {
     
     print('DEBUG: [ParentLogin] Username: $normalizedUsername');
 
+    // ── Path A: Firebase Auth sign-in ────────────────────────────────────────
     try {
-      // Direct Firebase Authentication using the hidden secure email mapping
       final safeEmailPrefix = normalizedUsername.replaceAll(RegExp(r'[^a-z0-9]'), '');
       final emailForAuth = '${safeEmailPrefix}_$normalizedPassword@hdpayment.preschool';
       
@@ -245,17 +245,15 @@ class AuthNotifier extends StateNotifier<AuthState> {
                password: password91,
              );
           } catch (fallbackError) {
-             throw e; // throw original error
+             throw e; // throw original error to fall through to Path B
           }
         } else {
-          throw e; // throw original error
+          throw e;
         }
       }
 
       final uid = cred.user!.uid;
 
-      // Now that the user is authentically signed in natively, they bypass 
-      // the lock in firestore.rules and can read their own data to verify role/status.
       final firestore = FirebaseFirestore.instance;
       final userDoc = await firestore
           .collection('users')
@@ -288,7 +286,6 @@ class AuthNotifier extends StateNotifier<AuthState> {
       final studentId = userData['studentId'] as String? ?? '';
       final mustChangePassword = userData['mustChangePassword'] as bool? ?? false;
 
-      // Create local session
       state = state.copyWith(
         isLoading: false,
         user: AuthUser(
@@ -305,12 +302,101 @@ class AuthNotifier extends StateNotifier<AuthState> {
       return true;
     } on FirebaseAuthException catch (e) {
       print('DEBUG: [ParentLogin] FirebaseAuthException: ${e.code}');
-      String errMsg = 'Login failed.';
-      if (e.code == 'user-not-found' || e.code == 'invalid-credential') {
-         errMsg = 'Invalid Username or Password.';
-      } else if (e.code == 'wrong-password') {
-         errMsg = 'Incorrect Password.';
+
+      // ── Path B: Firestore-based fallback ───────────────────────────────────
+      // Applies when the teacher's Firebase Auth account was never created
+      // (secondary auth creation can fail silently during addTeacher).
+      if (e.code == 'user-not-found' || e.code == 'invalid-credential' || e.code == 'wrong-password') {
+        print('DEBUG: [ParentLogin] Firebase Auth failed — trying Firestore fallback…');
+        try {
+          final firestore = FirebaseFirestore.instance;
+
+          // Hash the password the same way it was stored
+          final passwordBytes = utf8.encode(normalizedPassword);
+          final hashedPassword = sha256.convert(passwordBytes).toString();
+
+          final query = await firestore
+              .collection('users')
+              .where('username', isEqualTo: normalizedUsername)
+              .where('password', isEqualTo: hashedPassword)
+              .limit(1)
+              .get();
+
+          if (query.docs.isEmpty) {
+            // Also try the original (non-trimmed) username in case of mixed case
+            final query2 = await firestore
+                .collection('users')
+                .where('username', isEqualTo: username.trim().toLowerCase())
+                .limit(1)
+                .get();
+
+            if (query2.docs.isEmpty) {
+              state = state.copyWith(isLoading: false, error: 'Invalid Username or Password.');
+              return false;
+            }
+
+            // Found by username — verify password manually
+            final docData = query2.docs.first.data();
+            final storedHash = docData['password'] as String? ?? '';
+            if (storedHash != hashedPassword) {
+              state = state.copyWith(isLoading: false, error: 'Incorrect Password.');
+              return false;
+            }
+          }
+
+          final userData = (query.docs.isNotEmpty ? query.docs.first : null)?.data()
+              ?? (await firestore.collection('users')
+                  .where('username', isEqualTo: normalizedUsername)
+                  .limit(1).get()).docs.first.data();
+
+          final role = (userData['role'] as String? ?? '').toLowerCase();
+          if (role != 'parent' && role != 'teacher' && role != 'staff') {
+            state = state.copyWith(isLoading: false, error: 'Unauthorized access.');
+            return false;
+          }
+
+          final status = (userData['status'] as String? ?? '').toLowerCase();
+          if (status != 'active') {
+            state = state.copyWith(isLoading: false, error: 'Account not active. Please contact administrator.');
+            return false;
+          }
+
+          // Sign in anonymously to establish a Firebase session
+          String uid = userData['uid'] as String? ?? normalizedUsername;
+          try {
+            final anonCred = await _auth.signInAnonymously();
+            if (anonCred.user != null) uid = anonCred.user!.uid;
+          } catch (_) {
+            // OK to proceed without a real session for the Firestore-only path
+          }
+
+          final teacherName = userData['teacherName'] as String? ?? userData['parentName'] as String? ?? userData['name'] as String? ?? 'User';
+          final teacherEmail = userData['teacherEmail'] as String? ?? userData['parentEmail'] as String? ?? userData['email'] as String? ?? '';
+          final studentId = userData['studentId'] as String? ?? '';
+          final mustChangePassword = userData['mustChangePassword'] as bool? ?? false;
+
+          state = state.copyWith(
+            isLoading: false,
+            user: AuthUser(
+              uid: uid,
+              email: teacherEmail,
+              name: teacherName,
+              role: role,
+              username: normalizedUsername,
+              mustChangePassword: mustChangePassword,
+              studentId: studentId,
+            ),
+          );
+          print('DEBUG: [ParentLogin] Firestore fallback login success for $normalizedUsername as $role');
+          return true;
+        } catch (fallbackErr) {
+          print('DEBUG: [ParentLogin] Firestore fallback also failed: $fallbackErr');
+          state = state.copyWith(isLoading: false, error: 'Invalid Username or Password.');
+          return false;
+        }
       }
+
+      String errMsg = 'Login failed.';
       state = state.copyWith(isLoading: false, error: errMsg);
       return false;
     } catch (e) {
@@ -322,6 +408,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
       return false;
     }
   }
+
 
   Future<bool> changePassword(String newPassword) async {
     if (state.user == null || state.user!.username == null) return false;
