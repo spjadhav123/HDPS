@@ -208,19 +208,23 @@ class _StudentsScreenState extends ConsumerState<StudentsScreen> {
                   ),
                 ),
                 const SizedBox(width: 10),
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(student.name,
-                        style: const TextStyle(
-                            fontWeight: FontWeight.w600, fontSize: 13)),
-                    Text(
-                        student.studentCode.isNotEmpty
-                            ? student.studentCode
-                            : (student.id.length > 8 ? student.id.substring(0, 8) : student.id),
-                        style: const TextStyle(
-                            fontSize: 11, color: AppTheme.textSecondary)),
-                  ],
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(student.name,
+                          style: const TextStyle(
+                              fontWeight: FontWeight.w600, fontSize: 13),
+                          overflow: TextOverflow.ellipsis),
+                      Text(
+                          student.studentCode.isNotEmpty
+                              ? student.studentCode
+                              : (student.id.length > 8 ? student.id.substring(0, 8) : student.id),
+                          style: const TextStyle(
+                              fontSize: 11, color: AppTheme.textSecondary),
+                          overflow: TextOverflow.ellipsis),
+                    ],
+                  ),
                 ),
               ],
             ),
