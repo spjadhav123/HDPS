@@ -46,3 +46,6 @@ app.*.map.json
 /android/app/release
 .vercel
 node_modules/
+
+# Local Netlify folder
+.netlify

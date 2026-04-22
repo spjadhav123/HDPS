@@ -5,8 +5,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/models/student_model.dart';
+import '../../core/models/teacher_model.dart';
 import '../../core/providers/student_provider.dart';
+import '../../core/providers/teacher_provider.dart';
 import '../../shared/widgets/page_header.dart';
+import '../../shared/widgets/app_animations.dart';
 
 enum _AttStatus { present, absent, leave }
 
@@ -19,7 +22,7 @@ class AttendanceScreen extends ConsumerStatefulWidget {
 
 class _AttendanceScreenState extends ConsumerState<AttendanceScreen> {
   DateTime _selectedDate = DateTime.now();
-  String? _selectedClass;
+  String? _loadedForClass; // track which class we last loaded
   bool _isSaving = false;
   bool _isLoadingAttendance = false;
 
@@ -29,101 +32,118 @@ class _AttendanceScreenState extends ConsumerState<AttendanceScreen> {
   String get _dateKey => DateFormat('yyyy-MM-dd').format(_selectedDate);
 
   @override
-  void initState() {
-    super.initState();
-    // We'll load attendance after we have a class selection.
-  }
-
-  @override
   Widget build(BuildContext context) {
+    final teacherAsync = ref.watch(currentTeacherProvider);
     final studentsAsync = ref.watch(studentsStreamProvider);
+
+    // When teacher loads for the first time (or changes), load attendance
+    ref.listen<AsyncValue<Teacher?>>(currentTeacherProvider, (prev, next) {
+      next.whenData((teacher) {
+        if (teacher != null && teacher.className != _loadedForClass) {
+          _loadedForClass = teacher.className;
+          _loadAttendance(teacher.className);
+        }
+      });
+    });
 
     return Scaffold(
       backgroundColor: AppTheme.background,
-      body: Padding(
-        padding: const EdgeInsets.all(24),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            PageHeader(
-              title: 'Attendance',
-              subtitle:
-                  '${_selectedClass ?? 'Select class'} • ${DateFormat('dd MMM yyyy').format(_selectedDate)}',
-              action: studentsAsync.maybeWhen(
-                data: (students) {
-                  final classes = ['Playgroup', 'Nursery', 'Jr. KG', 'Sr. KG'];
+      body: teacherAsync.when(
+        loading: () => const Center(child: CircularProgressIndicator()),
+        error: (e, _) => Center(child: Text('Error loading teacher profile: $e')),
+        data: (teacher) {
+          if (teacher == null) {
+            return Center(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Icon(Icons.person_off_rounded, size: 64, color: AppTheme.textSecondary),
+                  const SizedBox(height: 16),
+                  const Text(
+                    'No class assigned',
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: AppTheme.textPrimary),
+                  ),
+                  const SizedBox(height: 8),
+                  const Text(
+                    'Please contact the administrator to assign you a class.',
+                    style: TextStyle(color: AppTheme.textSecondary),
+                    textAlign: TextAlign.center,
+                  ),
+                ],
+              ),
+            );
+          }
 
-                  if (_selectedClass == null) {
-                    // Set default class
-                    WidgetsBinding.instance.addPostFrameCallback((_) {
-                      if (!mounted) return;
-                      setState(() => _selectedClass = classes.first);
-                      _loadAttendance();
-                    });
-                  }
+          final className = teacher.className;
 
-                  return Row(
+          return Padding(
+            padding: const EdgeInsets.all(24),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                PageHeader(
+                  title: 'Attendance',
+                  subtitle: '$className • ${DateFormat('dd MMM yyyy').format(_selectedDate)}',
+                  action: Row(
                     children: [
-                      DropdownButton<String>(
-                        value: _selectedClass,
-                        hint: const Text('Class'),
-                        onChanged: (v) {
-                          setState(() => _selectedClass = v);
-                          _loadAttendance();
-                        },
-                        items: classes
-                            .map((c) =>
-                                DropdownMenuItem(value: c, child: Text(c)))
-                            .toList(),
-                        underline: const SizedBox(),
+                      // Read-only class badge
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                        decoration: BoxDecoration(
+                          color: AppTheme.primary.withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(20),
+                          border: Border.all(color: AppTheme.primary.withOpacity(0.3)),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            const Icon(Icons.class_rounded, size: 14, color: AppTheme.primary),
+                            const SizedBox(width: 6),
+                            Text(
+                              className,
+                              style: const TextStyle(
+                                fontSize: 13,
+                                fontWeight: FontWeight.w700,
+                                color: AppTheme.primary,
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
                       const SizedBox(width: 8),
                       OutlinedButton.icon(
-                        onPressed: _pickDate,
+                        onPressed: () => _pickDate(className),
                         icon: const Icon(Icons.calendar_today, size: 16),
                         label: Text(DateFormat('dd MMM').format(_selectedDate)),
                       ),
                       const SizedBox(width: 8),
                       ElevatedButton.icon(
-                        onPressed: (_isSaving ||
-                                _isLoadingAttendance ||
-                                _selectedClass == null)
+                        onPressed: (_isSaving || _isLoadingAttendance)
                             ? null
-                            : _saveAttendance,
+                            : () => _saveAttendance(className),
                         icon: const Icon(Icons.save_rounded, size: 16),
                         label: _isSaving
                             ? const Text('Saving...')
                             : const Text('Save'),
                       ),
                     ],
-                  );
-                },
-                orElse: () => Row(
-                  children: [
-                    OutlinedButton.icon(
-                      onPressed: _pickDate,
-                      icon: const Icon(Icons.calendar_today, size: 16),
-                      label: Text(DateFormat('dd MMM').format(_selectedDate)),
-                    ),
-                  ],
+                  ),
                 ),
-              ),
+                const SizedBox(height: 20),
+                _buildSummaryRow(studentsAsync, className),
+                const SizedBox(height: 16),
+                Expanded(child: _buildList(studentsAsync, className)),
+              ],
             ),
-            const SizedBox(height: 20),
-            _buildSummaryRow(studentsAsync),
-            const SizedBox(height: 16),
-            Expanded(child: _buildList(studentsAsync)),
-          ],
-        ),
+          );
+        },
       ),
     );
   }
 
-  Widget _buildSummaryRow(AsyncValue<List<Student>> studentsAsync) {
+  Widget _buildSummaryRow(AsyncValue<List<Student>> studentsAsync, String className) {
     final counts = studentsAsync.maybeWhen(
       data: (students) {
-        final className = _selectedClass;
-        if (className == null) return (0, 0, 0);
         final filtered = students.where((s) => s.className == className);
         int present = 0, absent = 0, leave = 0;
         for (final s in filtered) {
@@ -139,23 +159,29 @@ class _AttendanceScreenState extends ConsumerState<AttendanceScreen> {
 
     return Row(
       children: [
-        _SummaryChip(
-            label: 'Present', count: counts.$1, color: AppTheme.accent),
+        _SummaryChip(label: 'Present', count: counts.$1, color: AppTheme.accent),
         const SizedBox(width: 12),
-        _SummaryChip(
-            label: 'Absent', count: counts.$2, color: AppTheme.secondary),
+        _SummaryChip(label: 'Absent', count: counts.$2, color: AppTheme.secondary),
         const SizedBox(width: 12),
-        _SummaryChip(
-            label: 'Leave', count: counts.$3, color: AppTheme.warning),
+        _SummaryChip(label: 'Leave', count: counts.$3, color: AppTheme.warning),
         const Spacer(),
         if (_isLoadingAttendance)
-          const Text('Loading...',
-              style: TextStyle(fontSize: 12, color: AppTheme.textSecondary)),
+          const Row(
+            children: [
+              SizedBox(
+                width: 12,
+                height: 12,
+                child: CircularProgressIndicator(strokeWidth: 2),
+              ),
+              SizedBox(width: 6),
+              Text('Loading...', style: TextStyle(fontSize: 12, color: AppTheme.textSecondary)),
+            ],
+          ),
       ],
     );
   }
 
-  Widget _buildList(AsyncValue<List<Student>> studentsAsync) {
+  Widget _buildList(AsyncValue<List<Student>> studentsAsync, String className) {
     return Container(
       decoration: BoxDecoration(
         color: Colors.white,
@@ -164,14 +190,6 @@ class _AttendanceScreenState extends ConsumerState<AttendanceScreen> {
       ),
       child: studentsAsync.when(
         data: (students) {
-          final className = _selectedClass;
-          if (className == null) {
-            return const Center(
-              child: Text('Please select a class.',
-                  style: TextStyle(color: AppTheme.textSecondary)),
-            );
-          }
-
           final filtered = students
               .where((s) => s.className == className)
               .toList()
@@ -179,61 +197,77 @@ class _AttendanceScreenState extends ConsumerState<AttendanceScreen> {
 
           if (filtered.isEmpty) {
             return Center(
-              child: Text('No students registered in $className.',
-                  style: const TextStyle(color: AppTheme.textSecondary)),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(Icons.people_outline_rounded, size: 56, color: Colors.grey.shade300),
+                  const SizedBox(height: 12),
+                  Text(
+                    'No students registered in $className.',
+                    style: const TextStyle(color: AppTheme.textSecondary),
+                  ),
+                ],
+              ),
             );
           }
 
           return ListView.separated(
             itemCount: filtered.length,
-            separatorBuilder: (_, __) =>
-                Divider(height: 1, color: Colors.grey.shade100),
+            separatorBuilder: (_, __) => Divider(height: 1, color: Colors.grey.shade100),
             itemBuilder: (ctx, i) {
               final s = filtered[i];
               final status = _statusByStudentId[s.id] ?? _AttStatus.present;
-              return ListTile(
-                leading: CircleAvatar(
-                  radius: 18,
-                  backgroundColor: AppTheme.primary.withOpacity(0.15),
-                  child: Text(
-                    s.name.isNotEmpty ? s.name[0] : '?',
-                    style: const TextStyle(
-                      color: AppTheme.primary,
-                      fontWeight: FontWeight.w700,
+              return AnimatedListItem(
+                index: i,
+                maxDelay: 300,
+                child: ListTile(
+                  leading: CircleAvatar(
+                    radius: 18,
+                    backgroundColor: _statusColor(status).withOpacity(0.15),
+                    child: Text(
+                      s.name.isNotEmpty ? s.name[0] : '?',
+                      style: TextStyle(
+                        color: _statusColor(status),
+                        fontWeight: FontWeight.w700,
+                      ),
                     ),
                   ),
-                ),
-                title: Text(
-                  s.name,
-                  style: const TextStyle(
-                      fontSize: 14, fontWeight: FontWeight.w600),
-                ),
-                subtitle: Text(
-                  s.studentCode,
-                  style: const TextStyle(
-                      fontSize: 12, color: AppTheme.textSecondary),
-                ),
-                trailing: SegmentedButton<_AttStatus>(
-                  segments: const [
-                    ButtonSegment(
-                        value: _AttStatus.present,
-                        label: Text('P', style: TextStyle(fontSize: 11)),
-                        icon: Icon(Icons.check, size: 14)),
-                    ButtonSegment(
-                        value: _AttStatus.absent,
-                        label: Text('A', style: TextStyle(fontSize: 11)),
-                        icon: Icon(Icons.close, size: 14)),
-                    ButtonSegment(
-                        value: _AttStatus.leave,
-                        label: Text('L', style: TextStyle(fontSize: 11)),
-                        icon: Icon(Icons.beach_access, size: 14)),
-                  ],
-                  selected: {status},
-                  onSelectionChanged: (v) {
-                    setState(() => _statusByStudentId[s.id] = v.first);
-                  },
-                  style: const ButtonStyle(
-                    visualDensity: VisualDensity.compact,
+                  title: Text(
+                    s.name,
+                    style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
+                  ),
+                  subtitle: Text(
+                    s.studentCode,
+                    style: const TextStyle(fontSize: 12, color: AppTheme.textSecondary),
+                  ),
+                  trailing: SegmentedButton<_AttStatus>(
+                    segments: const [
+                      ButtonSegment(
+                          value: _AttStatus.present,
+                          label: Text('P', style: TextStyle(fontSize: 11)),
+                          icon: Icon(Icons.check_circle_outline, size: 14)),
+                      ButtonSegment(
+                          value: _AttStatus.absent,
+                          label: Text('A', style: TextStyle(fontSize: 11)),
+                          icon: Icon(Icons.cancel_outlined, size: 14)),
+                      ButtonSegment(
+                          value: _AttStatus.leave,
+                          label: Text('L', style: TextStyle(fontSize: 11)),
+                          icon: Icon(Icons.beach_access, size: 14)),
+                    ],
+                    selected: {status},
+                    onSelectionChanged: (v) {
+                      setState(() => _statusByStudentId[s.id] = v.first);
+                    },
+                    style: ButtonStyle(
+                      visualDensity: VisualDensity.compact,
+                      backgroundColor: WidgetStateProperty.resolveWith((states) {
+                        if (states.contains(WidgetState.selected)) {
+                          return _statusColor(status).withOpacity(0.15);
+                        }
+                        return null;
+                      }),
+                    ),
                   ),
                 ),
               );
@@ -246,7 +280,18 @@ class _AttendanceScreenState extends ConsumerState<AttendanceScreen> {
     );
   }
 
-  Future<void> _pickDate() async {
+  Color _statusColor(_AttStatus status) {
+    switch (status) {
+      case _AttStatus.present:
+        return AppTheme.accent;
+      case _AttStatus.absent:
+        return AppTheme.secondary;
+      case _AttStatus.leave:
+        return AppTheme.warning;
+    }
+  }
+
+  Future<void> _pickDate(String className) async {
     final d = await showDatePicker(
       context: context,
       initialDate: _selectedDate,
@@ -255,14 +300,11 @@ class _AttendanceScreenState extends ConsumerState<AttendanceScreen> {
     );
     if (d != null) {
       setState(() => _selectedDate = d);
-      _loadAttendance();
+      _loadAttendance(className);
     }
   }
 
-  Future<void> _loadAttendance() async {
-    final className = _selectedClass;
-    if (className == null) return;
-
+  Future<void> _loadAttendance(String className) async {
     setState(() => _isLoadingAttendance = true);
     try {
       final query = await FirebaseFirestore.instance
@@ -299,15 +341,17 @@ class _AttendanceScreenState extends ConsumerState<AttendanceScreen> {
     }
   }
 
-  Future<void> _saveAttendance() async {
-    final className = _selectedClass;
-    if (className == null) return;
-
+  Future<void> _saveAttendance(String className) async {
     final students = ref.read(studentsStreamProvider).maybeWhen(
           data: (s) => s.where((x) => x.className == className).toList(),
           orElse: () => <Student>[],
         );
     if (students.isEmpty) return;
+
+    final teacherName = ref.read(currentTeacherProvider).maybeWhen(
+          data: (t) => t?.name ?? 'Teacher',
+          orElse: () => 'Teacher',
+        );
 
     setState(() => _isSaving = true);
     try {
@@ -324,6 +368,7 @@ class _AttendanceScreenState extends ConsumerState<AttendanceScreen> {
           'studentCode': s.studentCode,
           'studentName': s.name,
           'status': _statusToString(status),
+          'markedBy': teacherName,
           'updatedAt': FieldValue.serverTimestamp(),
         }, SetOptions(merge: true));
       }
@@ -336,8 +381,7 @@ class _AttendanceScreenState extends ConsumerState<AttendanceScreen> {
               'Attendance saved for $className (${DateFormat('dd MMM yyyy').format(_selectedDate)})'),
           backgroundColor: AppTheme.accent,
           behavior: SnackBarBehavior.floating,
-          shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
         ),
       );
     } catch (e) {
@@ -384,7 +428,8 @@ class _SummaryChip extends StatelessWidget {
   final String label;
   final int count;
   final Color color;
-  const _SummaryChip({required this.label, required this.count, required this.color});
+  const _SummaryChip(
+      {required this.label, required this.count, required this.color});
 
   @override
   Widget build(BuildContext context) {
@@ -397,9 +442,13 @@ class _SummaryChip extends StatelessWidget {
       ),
       child: Row(
         children: [
-          Text('$count', style: TextStyle(fontSize: 20, fontWeight: FontWeight.w700, color: color)),
+          Text('$count',
+              style: TextStyle(
+                  fontSize: 20, fontWeight: FontWeight.w700, color: color)),
           const SizedBox(width: 6),
-          Text(label, style: TextStyle(fontSize: 12, color: color, fontWeight: FontWeight.w600)),
+          Text(label,
+              style: TextStyle(
+                  fontSize: 12, color: color, fontWeight: FontWeight.w600)),
         ],
       ),
     );

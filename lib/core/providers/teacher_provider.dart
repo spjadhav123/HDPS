@@ -7,6 +7,7 @@ import 'package:crypto/crypto.dart';
 import 'dart:convert';
 import '../models/teacher_model.dart';
 import 'student_provider.dart'; // Reusing firestoreProvider
+import 'auth_provider.dart';
 
 final teachersStreamProvider = StreamProvider<List<Teacher>>((ref) {
   final firestore = ref.watch(firestoreProvider);
@@ -16,6 +17,23 @@ final teachersStreamProvider = StreamProvider<List<Teacher>>((ref) {
       .snapshots()
       .map((snapshot) =>
           snapshot.docs.map((doc) => Teacher.fromFirestore(doc)).toList());
+});
+
+/// Streams the Teacher document for the currently logged-in teacher user.
+/// Matches by the teacher's name stored in AuthUser against the `name` field
+/// in the Firestore `teachers` collection.
+final currentTeacherProvider = StreamProvider<Teacher?>((ref) {
+  final user = ref.watch(authProvider).user;
+  if (user == null || user.role != 'teacher') return Stream.value(null);
+
+  final firestore = ref.watch(firestoreProvider);
+  return firestore
+      .collection('teachers')
+      .where('name', isEqualTo: user.name)
+      .limit(1)
+      .snapshots()
+      .map((snap) =>
+          snap.docs.isEmpty ? null : Teacher.fromFirestore(snap.docs.first));
 });
 
 final teacherRepositoryProvider = Provider((ref) => TeacherRepository(ref));
