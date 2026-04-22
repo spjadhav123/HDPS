@@ -1,0 +1,19 @@
+[build]
+  # Netlify doesn't natively support Flutter in its build images out of the box,
+  # but since the flutter build/web directory is already committed to the repo,
+  # we only need to install node dependencies for the serverless functions.
+  command = "npm install"
+  publish = "build/web"
+  functions = "netlify/functions"
+
+[[redirects]]
+  # Redirect any /api/* requests to the api serverless function
+  from = "/api/*"
+  to = "/.netlify/functions/api/:splat"
+  status = 200
+
+[[redirects]]
+  # For a Flutter web app (SPA), we need to catch all requests and return index.html
+  from = "/*"
+  to = "/index.html"
+  status = 200
