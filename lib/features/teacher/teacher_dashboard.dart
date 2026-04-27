@@ -38,7 +38,7 @@ class TeacherDashboard extends ConsumerWidget {
             // Filter students only for teacher's class
             final classStudents = studentsAsync.maybeWhen(
               data: (students) => students
-                  .where((s) => s.className == className)
+                  .where((s) => s.className.replaceAll(RegExp(r'[ \.]'), '').toLowerCase() == className.replaceAll(RegExp(r'[ \.]'), '').toLowerCase())
                   .toList(),
               orElse: () => <Student>[],
             );
@@ -265,7 +265,7 @@ class TeacherDashboard extends ConsumerWidget {
           studentsAsync.when(
             data: (List<Student> students) {
               final filtered = students
-                  .where((s) => s.className == className)
+                  .where((s) => s.className.replaceAll(RegExp(r'[ \.]'), '').toLowerCase() == className.replaceAll(RegExp(r'[ \.]'), '').toLowerCase())
                   .toList()
                 ..sort((a, b) => a.name.compareTo(b.name));
 

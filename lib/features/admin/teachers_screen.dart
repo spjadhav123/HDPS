@@ -538,7 +538,18 @@ class _TeachersScreenState extends ConsumerState<TeachersScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      _DetailRow(icon: Icons.class_rounded, label: 'Assigned Class', value: teacher.className.isEmpty ? 'Not Assigned' : teacher.className),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: _DetailRow(icon: Icons.class_rounded, label: 'Assigned Class', value: teacher.className.isEmpty ? 'Not Assigned' : teacher.className),
+                          ),
+                          TextButton.icon(
+                            onPressed: () => _showChangeClassDialog(context, teacher),
+                            icon: const Icon(Icons.edit_outlined, size: 16),
+                            label: const Text('Change'),
+                          ),
+                        ],
+                      ),
                       _DetailRow(icon: Icons.email_outlined, label: 'Email', value: teacher.email.isEmpty ? '—' : teacher.email),
                       _DetailRow(icon: Icons.phone_outlined, label: 'Phone', value: teacher.phone.isEmpty ? '—' : teacher.phone),
                       _DetailRow(icon: Icons.school_outlined, label: 'Qualification', value: teacher.qualification.isEmpty ? '—' : teacher.qualification),
@@ -608,6 +619,62 @@ class _TeachersScreenState extends ConsumerState<TeachersScreen> {
             label: const Text('Close'),
           ),
         ],
+      ),
+    );
+  }
+
+  // ─────────────────────────────────────────────────────────────────────────
+  // Change Assigned Class Dialog
+  // ─────────────────────────────────────────────────────────────────────────
+  void _showChangeClassDialog(BuildContext context, Teacher teacher) {
+    String selectedClass = teacher.className.isEmpty || !_classList.contains(teacher.className) 
+        ? 'Not Assigned' 
+        : teacher.className;
+    bool isSaving = false;
+
+    showDialog(
+      context: context,
+      builder: (ctx) => StatefulBuilder(
+        builder: (builderCtx, setDialogState) {
+          return AlertDialog(
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+            title: const Text('Assign Class'),
+            content: DropdownButtonFormField<String>(
+              value: selectedClass,
+              decoration: const InputDecoration(
+                labelText: 'Select Class',
+                border: OutlineInputBorder(),
+              ),
+              items: _classList.map((c) => DropdownMenuItem(value: c, child: Text(c))).toList(),
+              onChanged: (v) {
+                if (v != null) {
+                  setDialogState(() => selectedClass = v);
+                }
+              },
+            ),
+            actions: [
+              TextButton(
+                onPressed: isSaving ? null : () => Navigator.pop(ctx),
+                child: const Text('Cancel'),
+              ),
+              ElevatedButton(
+                onPressed: isSaving ? null : () async {
+                  setDialogState(() => isSaving = true);
+                  final updated = teacher.copyWith(className: selectedClass);
+                  await ref.read(teacherRepositoryProvider).updateTeacher(updated);
+                  if (ctx.mounted) {
+                    Navigator.pop(ctx); // Close assign dialog
+                    Navigator.pop(context); // Close details dialog to refresh
+                    AppToast.show(context, message: 'Class assigned successfully.', type: ToastType.success);
+                  }
+                },
+                child: isSaving 
+                    ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2))
+                    : const Text('Save'),
+              ),
+            ],
+          );
+        }
       ),
     );
   }

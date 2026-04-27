@@ -63,4 +63,34 @@ class Teacher {
       'createdAt': Timestamp.fromDate(createdAt),
     };
   }
+
+  Teacher copyWith({
+    String? id,
+    String? name,
+    String? subject,
+    String? className,
+    String? email,
+    String? phone,
+    String? qualification,
+    String? experience,
+    String? status,
+    String? profileImageUrl,
+    DateTime? joiningDate,
+    DateTime? createdAt,
+  }) {
+    return Teacher(
+      id: id ?? this.id,
+      name: name ?? this.name,
+      subject: subject ?? this.subject,
+      className: className ?? this.className,
+      email: email ?? this.email,
+      phone: phone ?? this.phone,
+      qualification: qualification ?? this.qualification,
+      experience: experience ?? this.experience,
+      status: status ?? this.status,
+      profileImageUrl: profileImageUrl ?? this.profileImageUrl,
+      joiningDate: joiningDate ?? this.joiningDate,
+      createdAt: createdAt ?? this.createdAt,
+    );
+  }
 }

@@ -144,7 +144,7 @@ class _AttendanceScreenState extends ConsumerState<AttendanceScreen> {
   Widget _buildSummaryRow(AsyncValue<List<Student>> studentsAsync, String className) {
     final counts = studentsAsync.maybeWhen(
       data: (students) {
-        final filtered = students.where((s) => s.className == className);
+        final filtered = students.where((s) => s.className.replaceAll(RegExp(r'[ \.]'), '').toLowerCase() == className.replaceAll(RegExp(r'[ \.]'), '').toLowerCase());
         int present = 0, absent = 0, leave = 0;
         for (final s in filtered) {
           final st = _statusByStudentId[s.id] ?? _AttStatus.present;
@@ -191,7 +191,7 @@ class _AttendanceScreenState extends ConsumerState<AttendanceScreen> {
       child: studentsAsync.when(
         data: (students) {
           final filtered = students
-              .where((s) => s.className == className)
+              .where((s) => s.className.replaceAll(RegExp(r'[ \.]'), '').toLowerCase() == className.replaceAll(RegExp(r'[ \.]'), '').toLowerCase())
               .toList()
             ..sort((a, b) => a.name.compareTo(b.name));
 
@@ -343,7 +343,7 @@ class _AttendanceScreenState extends ConsumerState<AttendanceScreen> {
 
   Future<void> _saveAttendance(String className) async {
     final students = ref.read(studentsStreamProvider).maybeWhen(
-          data: (s) => s.where((x) => x.className == className).toList(),
+          data: (s) => s.where((x) => x.className.replaceAll(RegExp(r'[ \.]'), '').toLowerCase() == className.replaceAll(RegExp(r'[ \.]'), '').toLowerCase()).toList(),
           orElse: () => <Student>[],
         );
     if (students.isEmpty) return;
