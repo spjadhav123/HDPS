@@ -409,22 +409,41 @@ class _PhotoTile extends ConsumerWidget {
   void _showFullScreen(BuildContext context) {
     showDialog(
       context: context,
-      builder: (_) => Dialog(
+      builder: (ctx) => Dialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
+        clipBehavior: Clip.antiAlias,
+        child: Stack(
+          alignment: Alignment.topRight,
           children: [
-            ClipRRect(
-              borderRadius: BorderRadius.circular(16),
-              child: photo.url.startsWith('data:') 
-                  ? Image.memory(base64Decode(photo.url.split(',').last))
-                  : Image.network(photo.url),
+            Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  constraints: BoxConstraints(
+                    maxHeight: MediaQuery.of(ctx).size.height * 0.7,
+                  ),
+                  child: photo.url.startsWith('data:') 
+                      ? Image.memory(base64Decode(photo.url.split(',').last), fit: BoxFit.contain)
+                      : Image.network(photo.url, fit: BoxFit.contain),
+                ),
+                if (photo.description.isNotEmpty)
+                  Padding(
+                    padding: const EdgeInsets.all(16),
+                    child: Text(photo.description),
+                  ),
+              ],
             ),
-            if (photo.description.isNotEmpty)
-              Padding(
-                padding: const EdgeInsets.all(16),
-                child: Text(photo.description),
+            Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: Material(
+                color: Colors.black54,
+                shape: const CircleBorder(),
+                child: IconButton(
+                  icon: const Icon(Icons.close, color: Colors.white),
+                  onPressed: () => Navigator.pop(ctx),
+                ),
               ),
+            ),
           ],
         ),
       ),

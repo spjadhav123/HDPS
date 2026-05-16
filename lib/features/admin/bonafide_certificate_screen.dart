@@ -4,6 +4,8 @@ import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:printing/printing.dart';
 import 'package:intl/intl.dart';
+import 'package:flutter/services.dart' show rootBundle;
+import 'dart:typed_data';
 import '../../core/theme/app_theme.dart';
 import '../../shared/widgets/page_header.dart';
 import '../../shared/widgets/app_animations.dart';
@@ -32,6 +34,10 @@ class _BonafideCertificateScreenState extends ConsumerState<BonafideCertificateS
 
     final dateStr = DateFormat('dd MMM yyyy').format(DateTime.now());
 
+    final ByteData bytes = await rootBundle.load('assets/images/logo.jpg');
+    final Uint8List logoBytes = bytes.buffer.asUint8List();
+    final logoImage = pw.MemoryImage(logoBytes);
+
     pdf.addPage(
       pw.Page(
         margin: const pw.EdgeInsets.all(32),
@@ -46,6 +52,8 @@ class _BonafideCertificateScreenState extends ConsumerState<BonafideCertificateS
               crossAxisAlignment: pw.CrossAxisAlignment.center,
               children: [
                 pw.SizedBox(height: 20),
+                pw.Image(logoImage, width: 140, height: 140),
+                pw.SizedBox(height: 12),
                 pw.Text(
                   'HUMPTY DUMPTY PRESCHOOL',
                   style: pw.TextStyle(

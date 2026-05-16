@@ -2,6 +2,7 @@
 import 'dart:typed_data';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
+import 'package:flutter/services.dart' show rootBundle;
 
 class PdfReceiptGenerator {
   static Future<Uint8List> generateReceipt({
@@ -14,6 +15,10 @@ class PdfReceiptGenerator {
     required DateTime date,
   }) async {
     final pdf = pw.Document();
+
+    final ByteData bytes = await rootBundle.load('assets/images/logo.jpg');
+    final Uint8List logoBytes = bytes.buffer.asUint8List();
+    final logoImage = pw.MemoryImage(logoBytes);
 
     pdf.addPage(
       pw.Page(
@@ -28,6 +33,8 @@ class PdfReceiptGenerator {
                 pw.Center(
                   child: pw.Column(
                     children: [
+                      pw.Image(logoImage, width: 100, height: 100),
+                      pw.SizedBox(height: 12),
                       pw.Text('HD PREPRIMARY SCHOOL', style: pw.TextStyle(fontSize: 24, fontWeight: pw.FontWeight.bold, color: PdfColors.blue900)),
                       pw.SizedBox(height: 4),
                       pw.Text('Nurturing Young Minds', style: const pw.TextStyle(fontSize: 14, color: PdfColors.grey700)),
