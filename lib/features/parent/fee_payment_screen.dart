@@ -17,6 +17,9 @@ import '../../core/providers/receipt_provider.dart';
 import '../../core/models/receipt_model.dart';
 import 'package:intl/intl.dart';
 import '../../shared/widgets/app_animations.dart';
+import 'package:printing/printing.dart';
+import 'package:pdf/pdf.dart';
+import '../../core/utils/pdf_receipt_generator.dart';
 import 'razorpay_web_stub.dart' if (dart.library.js) 'razorpay_web_impl.dart';
 
 class FeePaymentScreen extends ConsumerStatefulWidget {
@@ -161,7 +164,7 @@ class _FeePaymentScreenState extends ConsumerState<FeePaymentScreen> {
                       const SizedBox(height: 20),
                     ],
                     ref.watch(studentReceiptsStreamProvider(student.id)).when(
-                      data: (receipts) => _buildPaymentHistory(receipts),
+                      data: (receipts) => _buildPaymentHistory(receipts, student, amountDue),
                       loading: () => const ShimmerListView(itemCount: 2, itemHeight: 60),
                       error: (err, _) => Center(child: Text('Error loading history: $err')),
                     ),
@@ -318,7 +321,7 @@ class _FeePaymentScreenState extends ConsumerState<FeePaymentScreen> {
     ).animate().fadeIn(delay: 200.ms);
   }
 
-  Widget _buildPaymentHistory(List<Receipt> receipts) {
+  Widget _buildPaymentHistory(List<Receipt> receipts, Student student, double amountDue) {
     if (receipts.isEmpty) {
       return Container(
         padding: const EdgeInsets.all(20),
@@ -354,8 +357,26 @@ class _FeePaymentScreenState extends ConsumerState<FeePaymentScreen> {
                   const SizedBox(width: 8),
                   IconButton(
                     icon: const Icon(Icons.download_rounded, size: 18, color: AppTheme.primary),
-                    onPressed: () {
-                      AppToast.show(context, message: 'Downloading PDF Receipt: ${h.receiptNo}...', type: ToastType.success);
+                    onPressed: () async {
+                      AppToast.show(context, message: 'Generating PDF Receipt...', type: ToastType.info);
+                      try {
+                        final pdfBytes = await PdfReceiptGenerator.generateReceipt(
+                          receiptNo: h.receiptNo,
+                          studentName: h.studentName,
+                          className: h.className,
+                          amount: h.amount,
+                          balance: amountDue,
+                          paymentMode: h.paymentMethod.isNotEmpty ? h.paymentMethod : 'Online',
+                          date: h.date,
+                        );
+
+                        await Printing.layoutPdf(
+                          onLayout: (PdfPageFormat format) async => pdfBytes,
+                          name: 'Receipt_${h.receiptNo}',
+                        );
+                      } catch (e) {
+                        AppToast.show(context, message: 'Failed to generate receipt.', type: ToastType.error);
+                      }
                     },
                     tooltip: 'Download Receipt',
                   ),
