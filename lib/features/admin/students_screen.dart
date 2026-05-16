@@ -8,6 +8,7 @@ import 'package:excel/excel.dart' as excel_pkg;
 import 'package:share_plus/share_plus.dart';
 import 'dart:typed_data';
 import 'package:intl/intl.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../../core/models/student_model.dart';
 import '../../core/providers/student_provider.dart';
@@ -60,6 +61,13 @@ class _StudentsScreenState extends ConsumerState<StudentsScreen> {
                     onPressed: () => context.push('/admin/students/bulk'),
                     icon: const Icon(Icons.group_add_rounded, size: 18),
                     label: const Text('Bulk Add'),
+                  ),
+                  const SizedBox(width: 8),
+                  ElevatedButton.icon(
+                    onPressed: () => _showBroadcastDialog(context, studentsAsync.valueOrNull ?? []),
+                    icon: const Icon(Icons.campaign_rounded, size: 18, color: Colors.white),
+                    label: const Text('Broadcast Message'),
+                    style: ElevatedButton.styleFrom(backgroundColor: AppTheme.accent),
                   ),
                   const SizedBox(width: 8),
                   ElevatedButton.icon(
@@ -168,7 +176,7 @@ class _StudentsScreenState extends ConsumerState<StudentsScreen> {
           Expanded(flex: 3, child: Text('Parent', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 12, color: AppTheme.textSecondary))),
           Expanded(flex: 2, child: Text('Fees', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 12, color: AppTheme.textSecondary))),
           Expanded(flex: 1, child: Text('Status', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 12, color: AppTheme.textSecondary))),
-          SizedBox(width: 80, child: Text('Actions', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 12, color: AppTheme.textSecondary), textAlign: TextAlign.center)),
+          SizedBox(width: 110, child: Text('Actions', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 12, color: AppTheme.textSecondary), textAlign: TextAlign.center)),
         ],
       ),
     );
@@ -288,10 +296,30 @@ class _StudentsScreenState extends ConsumerState<StudentsScreen> {
             ),
           ),
           SizedBox(
-            width: 80,
+            width: 110,
             child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
+                IconButton(
+                  icon: const Icon(Icons.chat_bubble_outline_rounded, size: 18, color: Colors.green),
+                  onPressed: () async {
+                    final phone = student.phone.replaceAll(RegExp(r'[^0-9]'), '');
+                    // Format number: assumes Indian number if 10 digits
+                    final formattedPhone = phone.length == 10 ? '91$phone' : phone;
+                    final url = Uri.parse('https://wa.me/$formattedPhone?text=Hello%20${Uri.encodeComponent(student.parent)},%0A%0AThis%20is%20a%20message%20from%20Humpty%20Dumpty%20Preschool.');
+                    if (await canLaunchUrl(url)) {
+                      await launchUrl(url);
+                    } else {
+                      if (context.mounted) {
+                        AppToast.show(context, message: 'Could not open WhatsApp', type: ToastType.error);
+                      }
+                    }
+                  },
+                  padding: EdgeInsets.zero,
+                  constraints: const BoxConstraints(),
+                  tooltip: 'WhatsApp Parent',
+                ),
+                const SizedBox(width: 8),
                 IconButton(
                   icon: const Icon(Icons.edit_outlined, size: 18, color: AppTheme.primary),
                   onPressed: () => _showEditStudentDialog(context, student),
@@ -728,6 +756,94 @@ class _StudentsScreenState extends ConsumerState<StudentsScreen> {
               }
             },
             child: const Text('Delete', style: TextStyle(color: Colors.red)),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showBroadcastDialog(BuildContext context, List<Student> students) {
+    final messageController = TextEditingController(text: 'Hello Parents,\n\nThis is an important update from Humpty Dumpty Preschool:\n\n');
+    
+    showDialog(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: const Row(
+          children: [
+            Icon(Icons.campaign_rounded, color: AppTheme.accent),
+            SizedBox(width: 10),
+            Text('Broadcast WhatsApp Message'),
+          ],
+        ),
+        content: SizedBox(
+          width: 500,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text(
+                'WhatsApp does not allow sending a single message to multiple numbers automatically to prevent spam. '
+                'Type your message below and click "Send" for each parent to open WhatsApp Web.',
+                style: TextStyle(fontSize: 12, color: AppTheme.textSecondary),
+              ),
+              const SizedBox(height: 16),
+              TextField(
+                controller: messageController,
+                maxLines: 5,
+                decoration: const InputDecoration(
+                  labelText: 'Message Content',
+                  border: OutlineInputBorder(),
+                ),
+              ),
+              const SizedBox(height: 16),
+              const Text('Parents List', style: TextStyle(fontWeight: FontWeight.bold)),
+              const SizedBox(height: 8),
+              Container(
+                height: 300,
+                decoration: BoxDecoration(
+                  border: Border.all(color: Colors.grey.shade300),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: ListView.separated(
+                  itemCount: students.length,
+                  separatorBuilder: (_, __) => const Divider(height: 1),
+                  itemBuilder: (context, i) {
+                    final student = students[i];
+                    return ListTile(
+                      title: Text(student.parent, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600)),
+                      subtitle: Text('${student.name} (${student.className})', style: const TextStyle(fontSize: 11)),
+                      trailing: ElevatedButton.icon(
+                        icon: const Icon(Icons.send_rounded, size: 14, color: Colors.white),
+                        label: const Text('Send', style: TextStyle(fontSize: 12)),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.green,
+                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                          minimumSize: Size.zero,
+                        ),
+                        onPressed: () async {
+                          final phone = student.phone.replaceAll(RegExp(r'[^0-9]'), '');
+                          final formattedPhone = phone.length == 10 ? '91$phone' : phone;
+                          final url = Uri.parse('https://wa.me/$formattedPhone?text=${Uri.encodeComponent(messageController.text)}');
+                          
+                          if (await canLaunchUrl(url)) {
+                            await launchUrl(url);
+                          } else {
+                            if (context.mounted) AppToast.show(context, message: 'Could not open WhatsApp', type: ToastType.error);
+                          }
+                        },
+                      ),
+                    );
+                  },
+                ),
+              ),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext),
+            child: const Text('Close'),
           ),
         ],
       ),
