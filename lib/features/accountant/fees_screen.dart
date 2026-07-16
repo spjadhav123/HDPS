@@ -12,7 +12,8 @@ import '../../core/providers/student_provider.dart';
 import '../../core/utils/pdf_receipt_generator.dart';
 
 class FeesScreen extends ConsumerStatefulWidget {
-  const FeesScreen({super.key});
+  final bool showHeader;
+  const FeesScreen({super.key, this.showHeader = true});
 
   @override
   ConsumerState<FeesScreen> createState() => _FeesScreenState();
@@ -35,20 +36,35 @@ class _FeesScreenState extends ConsumerState<FeesScreen> {
     return Scaffold(
       backgroundColor: AppTheme.background,
       body: Padding(
-        padding: const EdgeInsets.all(24),
+        padding: widget.showHeader ? const EdgeInsets.all(24) : EdgeInsets.zero,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            PageHeader(
-              title: 'Fee Management',
-              subtitle: 'Monitor student fees, pending balances, and record payments.',
-              action: ElevatedButton.icon(
-                onPressed: () => _showAddPaymentDialog(null),
-                icon: const Icon(Icons.add_card_rounded, size: 18),
-                label: const Text('Record Payment'),
+            if (widget.showHeader) ...[
+              PageHeader(
+                title: 'Fee Management',
+                subtitle: 'Monitor student fees, pending balances, and record payments.',
+                action: ElevatedButton.icon(
+                  onPressed: () => _showAddPaymentDialog(null),
+                  icon: const Icon(Icons.add_card_rounded, size: 18),
+                  label: const Text('Record Payment'),
+                ),
               ),
-            ),
-            const SizedBox(height: 20),
+              const SizedBox(height: 20),
+            ] else ...[
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Text('Students Fee Status', style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: AppTheme.textPrimary)),
+                  ElevatedButton.icon(
+                    onPressed: () => _showAddPaymentDialog(null),
+                    icon: const Icon(Icons.add_card_rounded, size: 16),
+                    label: const Text('Record Payment'),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 16),
+            ],
             _buildFilterRow(),
             const SizedBox(height: 16),
             Expanded(
@@ -229,7 +245,9 @@ class _AddPaymentDialog extends ConsumerStatefulWidget {
 class _AddPaymentDialogState extends ConsumerState<_AddPaymentDialog> {
   final _amountCtrl = TextEditingController();
   final _transactionIdCtrl = TextEditingController();
+  final _parentNameCtrl = TextEditingController();
   String _selectedMode = 'Cash';
+  String _selectedInstallment = '1st Installment';
   Student? _selectedStudent;
   bool _isSaving = false;
 
@@ -237,6 +255,18 @@ class _AddPaymentDialogState extends ConsumerState<_AddPaymentDialog> {
   void initState() {
     super.initState();
     _selectedStudent = widget.initialStudent;
+    if (_selectedStudent != null) {
+      _parentNameCtrl.text = _selectedStudent!.parent;
+      _amountCtrl.text = (_selectedStudent!.feesTotal - _selectedStudent!.feesPaid).toStringAsFixed(0);
+    }
+  }
+
+  @override
+  void dispose() {
+    _amountCtrl.dispose();
+    _transactionIdCtrl.dispose();
+    _parentNameCtrl.dispose();
+    super.dispose();
   }
 
   Future<void> _save() async {
@@ -268,6 +298,9 @@ class _AddPaymentDialogState extends ConsumerState<_AddPaymentDialog> {
         'paymentMode': _selectedMode,
         'transactionId': _transactionIdCtrl.text.trim(),
         'date': FieldValue.serverTimestamp(),
+        'receivedFrom': _parentNameCtrl.text.trim(),
+        'installment': _selectedInstallment,
+        'description': 'Fee Payment: $_selectedInstallment via $_selectedMode',
       });
 
       if (mounted) {
@@ -283,6 +316,9 @@ class _AddPaymentDialogState extends ConsumerState<_AddPaymentDialog> {
           balance: balance.clamp(0, double.infinity),
           paymentMode: _selectedMode,
           date: DateTime.now(),
+          parentName: _parentNameCtrl.text.trim(),
+          transactionId: _transactionIdCtrl.text.trim(),
+          installment: _selectedInstallment,
         );
 
         await Printing.layoutPdf(
@@ -300,49 +336,88 @@ class _AddPaymentDialogState extends ConsumerState<_AddPaymentDialog> {
 
   @override
   Widget build(BuildContext context) {
+    final studentsAsync = ref.watch(studentsStreamProvider);
+
     return AlertDialog(
       title: const Text('Record Fee Payment'),
       content: SizedBox(
         width: 400,
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            if (_selectedStudent != null) ...[
-              Text('Student: ${_selectedStudent!.name} (${_selectedStudent!.className})'),
-              const SizedBox(height: 8),
-              Text('Balance Due: ₹${(_selectedStudent!.feesTotal - _selectedStudent!.feesPaid).toStringAsFixed(0)}', style: const TextStyle(fontWeight: FontWeight.bold, color: AppTheme.warning)),
-            ] else ...[
-              const Text('Please select a student from the list first.', style: TextStyle(color: Colors.redAccent)),
-            ],
-            const SizedBox(height: 16),
-            TextField(
-              controller: _amountCtrl,
-              keyboardType: TextInputType.number,
-              decoration: const InputDecoration(labelText: 'Amount (₹)', prefixIcon: Icon(Icons.currency_rupee_rounded)),
-            ),
-            const SizedBox(height: 16),
-            DropdownButtonFormField<String>(
-              value: _selectedMode,
-              decoration: const InputDecoration(labelText: 'Payment Mode', prefixIcon: Icon(Icons.payment_rounded)),
-              items: ['Cash', 'UPI', 'Bank Transfer', 'Card'].map((m) => DropdownMenuItem(value: m, child: Text(m))).toList(),
-              onChanged: (v) => setState(() => _selectedMode = v ?? 'Cash'),
-            ),
-            if (_selectedMode != 'Cash') ...[
+        child: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              if (widget.initialStudent != null) ...[
+                Text('Student: ${_selectedStudent!.name} (${_selectedStudent!.className})'),
+                const SizedBox(height: 8),
+                Text('Balance Due: ₹${(_selectedStudent!.feesTotal - _selectedStudent!.feesPaid).toStringAsFixed(0)}', style: const TextStyle(fontWeight: FontWeight.bold, color: AppTheme.warning)),
+              ] else ...[
+                studentsAsync.when(
+                  data: (students) {
+                    return DropdownButtonFormField<Student>(
+                      value: _selectedStudent != null ? students.firstWhere((s) => s.id == _selectedStudent!.id, orElse: () => _selectedStudent!) : null,
+                      decoration: const InputDecoration(labelText: 'Select Student', prefixIcon: Icon(Icons.person_rounded)),
+                      items: students.map((s) => DropdownMenuItem(value: s, child: Text('${s.name} (${s.className})'))).toList(),
+                      onChanged: (s) {
+                        setState(() {
+                          _selectedStudent = s;
+                          if (s != null) {
+                            _parentNameCtrl.text = s.parent;
+                            _amountCtrl.text = (s.feesTotal - s.feesPaid).toStringAsFixed(0);
+                          }
+                        });
+                      },
+                    );
+                  },
+                  loading: () => const Center(child: CircularProgressIndicator()),
+                  error: (e, _) => Text('Error loading students: $e'),
+                ),
+                if (_selectedStudent != null) ...[
+                  const SizedBox(height: 8),
+                  Text('Balance Due: ₹${(_selectedStudent!.feesTotal - _selectedStudent!.feesPaid).toStringAsFixed(0)}', style: const TextStyle(fontWeight: FontWeight.bold, color: AppTheme.warning)),
+                ],
+              ],
               const SizedBox(height: 16),
               TextField(
-                controller: _transactionIdCtrl,
-                decoration: const InputDecoration(labelText: 'Transaction/Cheque/Ref ID', prefixIcon: Icon(Icons.numbers_rounded)),
+                controller: _parentNameCtrl,
+                decoration: const InputDecoration(labelText: 'Received From (Mr./Mrs.)', prefixIcon: Icon(Icons.person_outline_rounded)),
               ),
-            ]
-          ],
+              const SizedBox(height: 16),
+              TextField(
+                controller: _amountCtrl,
+                keyboardType: TextInputType.number,
+                decoration: const InputDecoration(labelText: 'Amount (₹)', prefixIcon: Icon(Icons.currency_rupee_rounded)),
+              ),
+              const SizedBox(height: 16),
+              DropdownButtonFormField<String>(
+                value: _selectedInstallment,
+                decoration: const InputDecoration(labelText: 'Installment', prefixIcon: Icon(Icons.event_repeat_rounded)),
+                items: ['1st Installment', '2nd Installment', 'Full Payment'].map((m) => DropdownMenuItem(value: m, child: Text(m))).toList(),
+                onChanged: (v) => setState(() => _selectedInstallment = v ?? '1st Installment'),
+              ),
+              const SizedBox(height: 16),
+              DropdownButtonFormField<String>(
+                value: _selectedMode,
+                decoration: const InputDecoration(labelText: 'Payment Mode', prefixIcon: Icon(Icons.payment_rounded)),
+                items: ['Cash', 'UPI', 'Bank Transfer', 'Card', 'Cheque', 'D.D.'].map((m) => DropdownMenuItem(value: m, child: Text(m))).toList(),
+                onChanged: (v) => setState(() => _selectedMode = v ?? 'Cash'),
+              ),
+              if (_selectedMode != 'Cash') ...[
+                const SizedBox(height: 16),
+                TextField(
+                  controller: _transactionIdCtrl,
+                  decoration: const InputDecoration(labelText: 'Transaction/Cheque/Ref ID', prefixIcon: Icon(Icons.numbers_rounded)),
+                ),
+              ]
+            ],
+          ),
         ),
       ),
       actions: [
         TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel')),
         ElevatedButton(
           onPressed: _isSaving ? null : _save,
-          child: _isSaving ? const CircularProgressIndicator() : const Text('Record & Generate Receipt'),
+          child: _isSaving ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white)) : const Text('Record & Generate Receipt'),
         ),
       ],
     );

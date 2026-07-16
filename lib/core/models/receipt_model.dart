@@ -13,6 +13,8 @@ class Receipt {
   final String orderId;
   final String paymentMethod;
   final String description;
+  final String receivedFrom;
+  final String installment;
 
   Receipt({
     required this.id,
@@ -26,6 +28,8 @@ class Receipt {
     required this.orderId,
     required this.paymentMethod,
     required this.description,
+    this.receivedFrom = '',
+    this.installment = '',
   });
 
   factory Receipt.fromMap(Map<String, dynamic> data, String id) {
@@ -39,8 +43,10 @@ class Receipt {
       date: data['date'] != null ? (data['date'] as Timestamp).toDate() : DateTime.now(),
       transactionId: data['transactionId'] ?? '',
       orderId: data['orderId'] ?? '',
-      paymentMethod: data['paymentMethod'] ?? '',
+      paymentMethod: data['paymentMethod'] ?? data['paymentMode'] ?? '',
       description: data['description'] ?? '',
+      receivedFrom: data['receivedFrom'] ?? '',
+      installment: data['installment'] ?? '',
     );
   }
 
@@ -56,6 +62,9 @@ class Receipt {
       'orderId': orderId,
       'paymentMethod': paymentMethod,
       'description': description,
+      'receivedFrom': receivedFrom,
+      'installment': installment,
     };
   }
 }
+

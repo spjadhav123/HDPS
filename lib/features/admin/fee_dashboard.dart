@@ -5,6 +5,9 @@ import '../../shared/widgets/page_header.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../core/providers/student_provider.dart';
+import '../accountant/fees_screen.dart';
+import '../accountant/receipts_screen.dart';
+import 'book_payments_view.dart';
 
 class AdminFeeDashboard extends ConsumerWidget {
   const AdminFeeDashboard({super.key});
@@ -13,84 +16,127 @@ class AdminFeeDashboard extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final studentsAsync = ref.watch(studentsStreamProvider);
 
-    return Scaffold(
-      backgroundColor: AppTheme.background,
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(24),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const PageHeader(
-              title: 'Fee Management Dashboard',
-              subtitle: 'Monitor fee collections, pendings, and structures.',
-            ),
-            const SizedBox(height: 24),
-
-            // Quick Actions
-            Wrap(
-              spacing: 12,
-              runSpacing: 12,
-              children: [
-                ElevatedButton.icon(
-                  onPressed: () => context.push('/admin/fees/structure'),
-                  icon: const Icon(Icons.settings_suggest_rounded, size: 18),
-                  label: const Text('Fee Structure Setup'),
-                  style: ElevatedButton.styleFrom(backgroundColor: AppTheme.secondary),
-                ),
-                ElevatedButton.icon(
-                  onPressed: () => context.push('/admin/fees/assignment'),
-                  icon: const Icon(Icons.people_rounded, size: 18),
-                  label: const Text('Student Fee Assignment'),
-                  style: ElevatedButton.styleFrom(backgroundColor: AppTheme.primary),
-                ),
-              ],
-            ),
-            const SizedBox(height: 32),
-
-            studentsAsync.when(
-              data: (students) {
-                double totalCollected = 0;
-                double totalPending = 0;
-                double todayCollection = 0; // Mocked for now
-
-                for (var student in students) {
-                  totalCollected += student.feesPaid;
-                  final pending = student.feesTotal - student.feesPaid;
-                  if (pending > 0) totalPending += pending;
-                }
-
-                final isMobile = MediaQuery.of(context).size.width < 700;
-
-                return Column(
+    return DefaultTabController(
+      length: 4,
+      child: Scaffold(
+        backgroundColor: AppTheme.background,
+        body: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const PageHeader(
+                title: 'Fee Management Dashboard',
+                subtitle: 'Monitor fee collections, pendings, and structures.',
+              ),
+              const SizedBox(height: 16),
+              TabBar(
+                tabs: const [
+                  Tab(text: 'Overview'),
+                  Tab(text: 'Record Payments'),
+                  Tab(text: 'Receipts History'),
+                  Tab(text: 'Book Payments'),
+                ],
+                labelColor: AppTheme.primary,
+                unselectedLabelColor: AppTheme.textSecondary,
+                indicatorColor: AppTheme.primary,
+                labelStyle: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+              ),
+              const SizedBox(height: 20),
+              Expanded(
+                child: TabBarView(
                   children: [
-                    if (isMobile) ...[
-                      _buildSummaryCard('Total Collected', '₹${totalCollected.toStringAsFixed(0)}', Icons.account_balance_wallet_rounded, AppTheme.accent),
-                      const SizedBox(height: 16),
-                      _buildSummaryCard('Total Pending', '₹${totalPending.toStringAsFixed(0)}', Icons.warning_rounded, AppTheme.warning),
-                      const SizedBox(height: 16),
-                      _buildSummaryCard('Today\'s Collection', '₹${todayCollection.toStringAsFixed(0)}', Icons.today_rounded, AppTheme.secondary),
-                    ] else ...[
-                      Row(
-                        children: [
-                          Expanded(child: _buildSummaryCard('Total Collected', '₹${totalCollected.toStringAsFixed(0)}', Icons.account_balance_wallet_rounded, AppTheme.accent)),
-                          const SizedBox(width: 16),
-                          Expanded(child: _buildSummaryCard('Total Pending', '₹${totalPending.toStringAsFixed(0)}', Icons.warning_rounded, AppTheme.warning)),
-                          const SizedBox(width: 16),
-                          Expanded(child: _buildSummaryCard('Today\'s Collection', '₹${todayCollection.toStringAsFixed(0)}', Icons.today_rounded, AppTheme.secondary)),
-                        ],
-                      ),
-                    ],
-                    const SizedBox(height: 32),
-                    // Class wise summary
-                    _buildClassWiseSummary(students, isMobile),
+                    // Tab 1: Overview Dashboard
+                    _buildOverviewTab(context, studentsAsync),
+
+                    // Tab 2: Manage Student Fees
+                    const FeesScreen(showHeader: false),
+
+                    // Tab 3: Receipts History
+                    const ReceiptsScreen(showHeader: false),
+
+                    // Tab 4: Book Payments & Distribution
+                    const BookPaymentsView(),
                   ],
-                );
-              },
-              loading: () => const Center(child: CircularProgressIndicator()),
-              error: (e, _) => Center(child: Text('Error: $e')),
-            )
-          ],
+                ),
+              ),
+            ],
+          ),
         ),
+      ),
+    );
+  }
+
+  Widget _buildOverviewTab(BuildContext context, AsyncValue studentsAsync) {
+    return SingleChildScrollView(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const SizedBox(height: 12),
+          // Quick Actions
+          Wrap(
+            spacing: 12,
+            runSpacing: 12,
+            children: [
+              ElevatedButton.icon(
+                onPressed: () => context.push('/admin/fees/structure'),
+                icon: const Icon(Icons.settings_suggest_rounded, size: 18),
+                label: const Text('Fee Structure Setup'),
+                style: ElevatedButton.styleFrom(backgroundColor: AppTheme.secondary),
+              ),
+              ElevatedButton.icon(
+                onPressed: () => context.push('/admin/fees/assignment'),
+                icon: const Icon(Icons.people_rounded, size: 18),
+                label: const Text('Student Fee Assignment'),
+                style: ElevatedButton.styleFrom(backgroundColor: AppTheme.primary),
+              ),
+            ],
+          ),
+          const SizedBox(height: 32),
+
+          studentsAsync.when(
+            data: (students) {
+              double totalCollected = 0;
+              double totalPending = 0;
+              double todayCollection = 0; // Mocked for now
+
+              for (var student in students) {
+                totalCollected += student.feesPaid;
+                final pending = student.feesTotal - student.feesPaid;
+                if (pending > 0) totalPending += pending;
+              }
+
+              final isMobile = MediaQuery.of(context).size.width < 700;
+
+              return Column(
+                children: [
+                  if (isMobile) ...[
+                    _buildSummaryCard('Total Collected', '₹${totalCollected.toStringAsFixed(0)}', Icons.account_balance_wallet_rounded, AppTheme.accent),
+                    const SizedBox(height: 16),
+                    _buildSummaryCard('Total Pending', '₹${totalPending.toStringAsFixed(0)}', Icons.warning_rounded, AppTheme.warning),
+                    const SizedBox(height: 16),
+                    _buildSummaryCard('Today\'s Collection', '₹${todayCollection.toStringAsFixed(0)}', Icons.today_rounded, AppTheme.secondary),
+                  ] else ...[
+                    Row(
+                      children: [
+                        Expanded(child: _buildSummaryCard('Total Collected', '₹${totalCollected.toStringAsFixed(0)}', Icons.account_balance_wallet_rounded, AppTheme.accent)),
+                        const SizedBox(width: 16),
+                        Expanded(child: _buildSummaryCard('Total Pending', '₹${totalPending.toStringAsFixed(0)}', Icons.warning_rounded, AppTheme.warning)),
+                        const SizedBox(width: 16),
+                        Expanded(child: _buildSummaryCard('Today\'s Collection', '₹${todayCollection.toStringAsFixed(0)}', Icons.today_rounded, AppTheme.secondary)),
+                      ],
+                    ),
+                  ],
+                  const SizedBox(height: 32),
+                  // Class wise summary
+                  _buildClassWiseSummary(students, isMobile),
+                ],
+              );
+            },
+            loading: () => const Center(child: CircularProgressIndicator()),
+            error: (e, _) => Center(child: Text('Error: $e')),
+          )
+        ],
       ),
     );
   }
@@ -152,24 +198,24 @@ class AdminFeeDashboard extends ConsumerWidget {
           ...classSummary.entries.map((e) {
             return Padding(
               padding: const EdgeInsets.only(bottom: 12),
-              child: isMobile 
-                ? Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(e.key, style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 16)),
-                      const SizedBox(height: 4),
-                      Text('Collected: ₹${e.value['collected']!.toStringAsFixed(0)}', style: const TextStyle(color: AppTheme.accent, fontWeight: FontWeight.w600)),
-                      Text('Pending: ₹${e.value['pending']!.toStringAsFixed(0)}', style: TextStyle(color: e.value['pending']! > 0 ? AppTheme.warning : AppTheme.textSecondary)),
-                      const Divider(),
-                    ],
-                  )
-                : Row(
-                    children: [
-                      Expanded(flex: 2, child: Text(e.key, style: const TextStyle(fontWeight: FontWeight.w600))),
-                      Expanded(flex: 3, child: Text('Collected: ₹${e.value['collected']!.toStringAsFixed(0)}', style: const TextStyle(color: AppTheme.accent, fontWeight: FontWeight.w600))),
-                      Expanded(flex: 3, child: Text('Pending: ₹${e.value['pending']!.toStringAsFixed(0)}', style: TextStyle(color: e.value['pending']! > 0 ? AppTheme.warning : AppTheme.textSecondary))),
-                    ],
-                  ),
+              child: isMobile
+                  ? Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(e.key, style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 16)),
+                        const SizedBox(height: 4),
+                        Text('Collected: ₹${e.value['collected']!.toStringAsFixed(0)}', style: const TextStyle(color: AppTheme.accent, fontWeight: FontWeight.w600)),
+                        Text('Pending: ₹${e.value['pending']!.toStringAsFixed(0)}', style: TextStyle(color: e.value['pending']! > 0 ? AppTheme.warning : AppTheme.textSecondary)),
+                        const Divider(),
+                      ],
+                    )
+                  : Row(
+                      children: [
+                        Expanded(flex: 2, child: Text(e.key, style: const TextStyle(fontWeight: FontWeight.w600))),
+                        Expanded(flex: 3, child: Text('Collected: ₹${e.value['collected']!.toStringAsFixed(0)}', style: const TextStyle(color: AppTheme.accent, fontWeight: FontWeight.w600))),
+                        Expanded(flex: 3, child: Text('Pending: ₹${e.value['pending']!.toStringAsFixed(0)}', style: TextStyle(color: e.value['pending']! > 0 ? AppTheme.warning : AppTheme.textSecondary))),
+                      ],
+                    ),
             );
           }),
           if (classSummary.isEmpty) const Text('No data available', style: TextStyle(color: AppTheme.textSecondary)),
